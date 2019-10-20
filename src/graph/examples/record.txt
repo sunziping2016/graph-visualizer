@@ -1,0 +1,6 @@
+{
+  "type": "node",
+  "id": "N926",
+  "label": "hello\\nworld |{ b |{c|<here> d|e}| f}| g | h",
+  "shape": "record"
+}

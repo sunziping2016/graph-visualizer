@@ -1,0 +1,268 @@
+{
+  "type": "graph",
+  "id": "stdThreadJoin",
+  "label": "VFG of stdThreadJoin",
+  "layout": {
+    "type": "KamadaKawai",
+    "springLength": 150,
+    "direction": "LR"
+  },
+  "children": [
+    {
+      "type": "graph",
+      "id": "cluster_input",
+      "label": "Inputs",
+      "style": "filled",
+      "fillColor": "darkolivegreen",
+      "strokeWidth": 1,
+      "strokeColor": "black",
+      "children": [
+        {
+          "type": "node",
+          "id": "N912",
+          "label": "N912\n[arg:stdThreadJoin_0]",
+          "style": "filled",
+          "fillColor": "cyan",
+          "shape": "box"
+        },
+        {
+          "type": "node",
+          "id": "N913",
+          "label": "N913\n[arg:stdThreadJoin_0]*",
+          "style": "filled",
+          "fillColor": "cyan",
+          "shape": "box"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "id": "cluster_output",
+      "label": "Outputs",
+      "style": "filled",
+      "fillColor": "goldenrod",
+      "strokeWidth": 1,
+      "strokeColor": "black",
+      "children": [
+        {
+          "type": "node",
+          "id": "N940",
+          "label": "N940\n_",
+          "style": "filled",
+          "fillColor": "cornflowerblue",
+          "shape": "box"
+        }
+      ]
+    },
+    {
+      "type": "node",
+      "id": "N919",
+      "label": "N919\n&dummy",
+      "style": "filled",
+      "fillColor": "cyan",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N925",
+      "label": "N925\n0",
+      "style": "filled",
+      "fillColor": "lightgrey",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N926",
+      "label": "<table  border='0' cellspacing='0'><tr><td port='top' bgcolor='palegreen' border='1'>N926(%6)<br/>getelementptr</td></tr><tr><td port='op_1' border='1'>N912</td></tr><tr><td port='op_2' border='1'>N925</td></tr><tr><td port='op_3' border='1'>N925</td></tr></table>",
+      "shape": "table"
+    },
+    {
+      "type": "node",
+      "id": "N927",
+      "label": "N927\nDEREF",
+      "style": "filled",
+      "fillColor": "gainsboro",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N928",
+      "label": "N928\nstdThreadJoin::6*",
+      "style": "filled",
+      "fillColor": "cyan",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N930",
+      "label": "N930\n[arg:_pthread_join_0]",
+      "style": "filled",
+      "fillColor": "cornflowerblue",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N931",
+      "label": "N931\n[arg:_pthread_join_1]",
+      "style": "filled",
+      "fillColor": "cornflowerblue",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N932",
+      "label": "N932\nstdThreadJoin::8",
+      "style": "filled",
+      "fillColor": "cyan",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N933",
+      "label": "<table  border='0' cellspacing='0'><tr><td port='top' bgcolor='palegreen' border='1'>N933(%9)<br/>icmp ne</td></tr><tr><td port='op_1' border='1'>N925</td></tr><tr><td port='op_2' border='1'>N932</td></tr></table>",
+      "shape": "table"
+    },
+    {
+      "type": "node",
+      "id": "N934",
+      "label": "N934\n1",
+      "style": "filled",
+      "fillColor": "lightgrey",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "N937",
+      "label": "N937\n&gamma;",
+      "style": "filled",
+      "fillColor": "darksalmon",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "P595",
+      "label": "",
+      "style": "filled",
+      "color": "crimson",
+      "fillColor": "crimson",
+      "shape": "circle",
+      "radius": 0.025
+    },
+    {
+      "type": "node",
+      "id": "P596",
+      "label": "",
+      "style": "filled",
+      "color": "crimson",
+      "fillColor": "crimson",
+      "shape": "circle",
+      "radius": 0.025
+    },
+    {
+      "type": "edge",
+      "from": "N937",
+      "to": "N940"
+    },
+    {
+      "type": "edge",
+      "from": "N912",
+      "to": "N926:op_1"
+    },
+    {
+      "type": "edge",
+      "from": "N925",
+      "to": "N926:op_2"
+    },
+    {
+      "type": "edge",
+      "from": "N925",
+      "to": "N926:op_3"
+    },
+    {
+      "type": "edge",
+      "from": "N926:top",
+      "to": "N927"
+    },
+    {
+      "type": "edge",
+      "from": "N928",
+      "to": "N930"
+    },
+    {
+      "type": "edge",
+      "from": "N919",
+      "to": "N931"
+    },
+    {
+      "type": "edge",
+      "from": "N925",
+      "to": "N933:op_1"
+    },
+    {
+      "type": "edge",
+      "from": "N932",
+      "to": "N933:op_2"
+    },
+    {
+      "type": "edge",
+      "from": "N925",
+      "to": "P595",
+      "arrowHead": "none"
+    },
+    {
+      "type": "edge",
+      "from": "P595",
+      "to": "N937"
+    },
+    {
+      "type": "edge",
+      "from": "N933:top",
+      "to": "P595",
+      "label": "N933",
+      "style": "dotted",
+      "color": "crimson"
+    },
+    {
+      "type": "edge",
+      "from": "N934",
+      "to": "P596",
+      "arrowHead": "none"
+    },
+    {
+      "type": "edge",
+      "from": "P596",
+      "to": "N937"
+    },
+    {
+      "type": "edge",
+      "from": "N933:top",
+      "to": "P596",
+      "label": "!(N933)",
+      "style": "dotted",
+      "color": "crimson"
+    },
+    {
+      "type": "node",
+      "id": "CS_31",
+      "shape": "record",
+      "style": "bold",
+      "direction": "vertical",
+      "label": "_pthread_join | { {<cs_id_in_0> N930 | <cs_id_in_1> N931} | {<cs_id_out_0> N932} }"
+    },
+    {
+      "type": "edge",
+      "from": "N930",
+      "to": "CS_31:cs_id_in_0"
+    },
+    {
+      "type": "edge",
+      "from": "N931",
+      "to": "CS_31:cs_id_in_1"
+    },
+    {
+      "type": "edge",
+      "from": "CS_31:cs_id_out_0",
+      "to": "N932"
+    }
+  ]
+}

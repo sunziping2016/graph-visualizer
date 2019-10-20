@@ -1,0 +1,58 @@
+{
+  "type": "graph",
+  "id": "stdThreadJoin",
+  "label": "VFG of stdThreadJoin",
+  "layout": {
+    "type": "KamadaKawai",
+    "springLength": 150,
+    "direction": "LR"
+  },
+  "children": [
+    {
+      "type": "graph",
+      "id": "cluster_input",
+      "label": "Inputs",
+      "style": "filled",
+      "fillColor": "darkolivegreen",
+      "strokeWidth": 1,
+      "strokeColor": "black",
+      "children": [
+        {
+          "type": "node",
+          "id": "N921",
+          "label": "N912\n[arg:stdThreadJoin_0]",
+          "style": "filled",
+          "fillColor": "cyan",
+          "shape": "box"
+        },
+        {
+          "type": "node",
+          "id": "N913",
+          "label": "N913\n[arg:stdThreadJoin_0]*",
+          "style": "filled",
+          "fillColor": "cyan",
+          "shape": "box"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "id": "cluster_output",
+      "label": "Outputs",
+      "style": "filled",
+      "fillColor": "goldenrod",
+      "strokeWidth": 1,
+      "strokeColor": "black",
+      "children": [
+        {
+          "type": "node",
+          "id": "N940",
+          "label": "N940\n_",
+          "style": "filled",
+          "fillColor": "cornflowerblue",
+          "shape": "box"
+        }
+      ]
+    }
+  ]
+}

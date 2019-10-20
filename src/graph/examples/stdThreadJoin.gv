@@ -1,0 +1,54 @@
+digraph stdThreadJoin {
+label=" VFG of stdThreadJoin"
+graph [rankdir="LR"]
+subgraph cluster_input {
+label="Inputs"
+style=filled
+color=black
+fillcolor=darkolivegreen1
+N912 [label="N912\n[arg:stdThreadJoin_0]", style=filled, fillcolor="cyan3", shape=box]
+N913 [label="N913\n[arg:stdThreadJoin_0]*", style=filled, fillcolor="cyan3", shape=box]
+} # end of input
+subgraph cluster_output {
+label="Outputs"
+style=filled
+color=black
+fillcolor=goldenrod1
+N940 [label="N940\n_", style=filled, fillcolor="cornflowerblue", shape=box]
+} # end of output
+# body nodes
+N919 [label="N919\n&dummy", style=filled, fillcolor="cyan3", shape=box]
+N925 [label="N925\n0", style=filled, fillcolor="lightgrey", shape=box]
+N926 [label=<<table  border='0' cellspacing='0'><tr><td port='top' bgcolor='palegreen' border='1'>N926(%6)<br/>getelementptr</td></tr><tr><td port='op_1' border='1'>N912</td></tr><tr><td port='op_2' border='1'>N925</td></tr><tr><td port='op_3' border='1'>N925</td></tr></table>>, shape=none]
+N927 [label="N927\nDEREF", style=filled, fillcolor="gainsboro", shape=box]
+N928 [label="N928\nstdThreadJoin::6*", style=filled, fillcolor="cyan3", shape=box]
+N930 [label="N930\n[arg:_pthread_join_0]", style=filled, fillcolor="cornflowerblue", shape=box]
+N931 [label="N931\n[arg:_pthread_join_1]", style=filled, fillcolor="cornflowerblue", shape=box]
+N932 [label="N932\nstdThreadJoin::8", style=filled, fillcolor="cyan3", shape=box]
+N933 [label=<<table  border='0' cellspacing='0'><tr><td port='top' bgcolor='palegreen' border='1'>N933(%9)<br/>icmp ne</td></tr><tr><td port='op_1' border='1'>N925</td></tr><tr><td port='op_2' border='1'>N932</td></tr></table>>, shape=none]
+N934 [label="N934\n1", style=filled, fillcolor="lightgrey", shape=box]
+N937 [label="N937\n&gamma;", style=filled, fillcolor="darksalmon", shape=box]
+# proxy
+P595 [label="",style=filled,color=crimson,fillcolor=crimson,shape=circle,height=0.05,width=0.05]
+P596 [label="",style=filled,color=crimson,fillcolor=crimson,shape=circle,height=0.05,width=0.05]
+# end of body
+N937 -> N940
+N912 -> N926:op_1
+N925 -> N926:op_2
+N925 -> N926:op_3
+N926:top -> N927
+N928 -> N930
+N919 -> N931
+N925 -> N933:op_1
+N932 -> N933:op_2
+N925 -> P595 [arrowhead=none]
+P595 -> N937
+N933:top -> P595 [label="N933",style=dotted,color=crimson]
+N934 -> P596 [arrowhead=none]
+P596 -> N937
+N933:top -> P596 [label="!(N933)",style=dotted,color=crimson]
+CS_31 [shape=record,style=bold,label="_pthread_join | { {<cs_id_in_0> N930 | <cs_id_in_1> N931} | {<cs_id_out_0> N932} }"]
+N930 -> CS_31:cs_id_in_0
+N931 -> CS_31:cs_id_in_1
+CS_31:cs_id_out_0 -> N932
+}
