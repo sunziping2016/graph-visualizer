@@ -26,6 +26,16 @@ export default class Root extends EventEmitter {
       ],
     }]);
   }
+  public redraw(data: RenderableData) {
+    this.child = new (renderableFactory(data))(this, null);
+    this.child.setData(data);
+    this.emit('render', [{
+      key: 'main',
+      children: [
+        this.child.render(),
+      ],
+    }]);
+  }
 }
 
 export const globalRoot = new Root();
@@ -47,7 +57,13 @@ import tableJson from '!raw-loader!./examples/table.txt';
 import Renderable from '@/graph/base/Renderable';
 import Port from '@/graph/base/Port';
 
-export const globalExamples = [
+interface Example {
+  name: string;
+  parser: string;
+  content: string;
+}
+
+export const globalExamples: Example[] = [
   {
     name: 'stdThreadJoinGv',
     parser: 'graphviz',

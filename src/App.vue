@@ -66,6 +66,7 @@
                 <input type="file" id="input-file" @change="inputFileChange">
               </div>
               <div class="settings-input-format">
+                <!--suppress HtmlFormInputWithoutLabel -->
                 <select id="input-format" v-model="parser">
                   <option value="json" selected>JSON</option>
                   <option value="graphviz">Graphviz</option>
@@ -110,9 +111,8 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import CollapsiblePane from './components/CollapsiblePane.vue';
-import _ from 'lodash';
 import Graph from './components/Graph.vue';
-import Root, {
+import {
   globalRoot,
   globalParsers,
   globalExamples,
@@ -134,6 +134,7 @@ export default class Group extends Vue {
     return this.desktopLayout ? this.settingsWidth : this.canvasWidth;
   }
   // UI data
+  // noinspection JSUnusedLocalSymbols
   private settingsOpen = true;
   private settingsWidth = 300;
   private minGraphWidth = 150;
@@ -149,6 +150,7 @@ export default class Group extends Vue {
   private rawInput = '';
   private parseError = null;
   private parsedInput = '';
+  // noinspection JSUnusedLocalSymbols
   private examples = globalExamples;
   // Rendered data
   // noinspection JSMismatchedCollectionQueryUpdate
@@ -192,13 +194,7 @@ export default class Group extends Vue {
     this.parseInput();
   }
   public redraw() {
-    // TODO
-    // this.$options.graph = new Root()
-    // this.$options.graph.addEventListener('render', data => {
-    //   this.rendered = data
-    // })
-    // if (this.parsedInput)
-    //   this.$options.graph.setData(JSON.parse(this.parsedInput))
+    globalRoot.redraw(JSON.parse(this.parsedInput));
   }
   public selectExample(i: number) {
     const example = globalExamples[i];
@@ -244,7 +240,7 @@ export default class Group extends Vue {
     this.sizerMouseActive = false;
   }
   public onMainSizerMouseMove(e: MouseEvent) {
-    if (e.buttons === 0 || e.which === 0) {
+    if (e.buttons === 0) {
       this.sizerMouseActive = false;
     }
     if (this.sizerMouseActive) {
