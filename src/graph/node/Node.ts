@@ -5,6 +5,7 @@ import NodeType from '@/graph/node/type/NodeType';
 import Renderable from '@/graph/base/Renderable';
 import Port from '@/graph/base/Port';
 import Positioned from '@/graph/base/Positioned';
+import Graph from '@/graph/graph/Graph';
 
 export default class Node extends Port implements Renderable {
   public static getId(data: NodeData) {
@@ -13,9 +14,13 @@ export default class Node extends Port implements Renderable {
     }
     return data.id;
   }
+  public readonly graph: Graph | null;
   private nodeType?: NodeType;
-  constructor(root: Root, parent: Positioned | null = null) {
+  constructor(root: Root,
+              graph: Graph | null = null,
+              parent: Positioned | null = null) {
     super(root, parent);
+    this.graph = graph;
   }
   public setData(data: NodeData) {
     this.id = Node.getId(data);

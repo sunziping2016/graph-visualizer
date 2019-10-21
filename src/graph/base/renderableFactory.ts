@@ -7,7 +7,8 @@ import Renderable from '@/graph/base/Renderable';
 import Positioned from '@/graph/base/Positioned';
 
 interface RenderableConstructor {
-  new (root: Root, parent: Positioned | null): Renderable;
+  new (root: Root, graph: Graph | null,
+       parent: Positioned | null): Renderable;
   getId(data: RenderableData): string;
 }
 

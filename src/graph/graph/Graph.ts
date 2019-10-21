@@ -3,12 +3,14 @@ import Root from '@/graph/Root';
 import renderableFactory from '@/graph/base/renderableFactory';
 import Edge from '@/graph/edge/Edge';
 import layoutFactory from '@/graph/graph/layout';
+import componentFactory from '@/graph/graph/component';
 import graphTypeFactory from '@/graph/graph/type';
-import GraphLayout from '@/graph/graph/layout/GraphLayout';
-import GraphType from '@/graph/graph/type/GraphType';
 import Port from '@/graph/base/Port';
 import Renderable from '@/graph/base/Renderable';
 import Positioned from '@/graph/base/Positioned';
+import GraphLayout, {LayoutData, LayoutEdgeData} from '@/graph/graph/layout/GraphLayout';
+import ComponentLayout from '@/graph/graph/component/ComponentLayout';
+import GraphType from '@/graph/graph/type/GraphType';
 
 export default class Graph extends Port implements Renderable {
   public static getId(data: GraphData) {
@@ -17,26 +19,24 @@ export default class Graph extends Port implements Renderable {
     }
     return data.id;
   }
+  public readonly graph: Graph | null;
   public depth?: number;
-  private children?: Map<string, Renderable>;
-  private ports?: Map<string, Port>;
-  private graphs?: Map<string, Graph>;
-  private edges?: Map<string, Edge>;
-  private layout?: GraphLayout;
+  public children?: Map<string, Renderable>;
+  public ports?: Map<string, Port>;
+  public subgraphs?: Map<string, Graph>;
+  public edges?: Map<string, Edge>;
+  public layouts?: GraphLayout[];
+  public layoutsData?: LayoutData[];
+  public componentLayout?: ComponentLayout;
   private graphType?: GraphType;
-  constructor(root: Root, parent: Positioned | null = null) {
+  constructor(root: Root,
+              graph: Graph | null = null,
+              parent: Positioned | null = null) {
     super(root, parent);
+    this.graph = graph;
   }
   public setData(data: GraphData) {
     this.id = Graph.getId(data);
-    const layoutClass = layoutFactory(data.layout);
-    if (!this.layout || this.layout.constructor !== layoutClass) {
-      this.layout = new layoutClass(this);
-    }
-    const typeClass = graphTypeFactory(data);
-    if (!this.graphType || this.graphType.constructor !== typeClass) {
-      this.graphType = new typeClass(this, this.layout);
-    }
     const newChildren = new Map();
     this.depth = data.depth || 0;
     if (data.children) {
@@ -49,27 +49,115 @@ export default class Graph extends Port implements Renderable {
         const newChild = this.children &&
             this.children.has(id) &&
             this.children.get(id)!.constructor === type ?
-            this.children.get(id)! : new type(this.root, this.layout);
+            this.children.get(id)! : new type(this.root, this, null);
         child.depth = this.depth + 1;
         newChild.setData(child);
         newChildren.set(id, newChild);
       }
     }
+    // Create maps and arrays
     this.children = newChildren;
     this.edges = new Map();
     this.ports = new Map();
-    this.graphs = new Map();
+    this.subgraphs = new Map();
     for (const [name, renderable] of this.children.entries()) {
       if (renderable instanceof Edge) {
         this.edges.set(name, renderable);
       } else {
         this.ports.set(name, renderable as any);
         if (renderable instanceof Graph) {
-          this.graphs.set(name, renderable as any);
+          this.subgraphs.set(name, renderable as any);
         }
       }
     }
-    this.layout.solve(data.layout);
+    // Create adjacency list
+    const adjacencyList: Map<Port, Port[]> = new Map();
+    const edgesData: LayoutEdgeData[] = [];
+    for (const edge of this.edges.values()) {
+      const from = this.findPort(edge.from!.split(':'));
+      const to = this.findPort(edge.to!.split(':'));
+      const fromBelonging = this.findBelongingPort(edge.from!);
+      const toBelonging = this.findBelongingPort(edge.to!);
+      if (from && to && fromBelonging && toBelonging) {
+        if (!adjacencyList.has(fromBelonging)) {
+          adjacencyList.set(fromBelonging, []);
+        }
+        if (!adjacencyList.has(toBelonging)) {
+          adjacencyList.set(toBelonging, []);
+        }
+        adjacencyList.get(fromBelonging)!.push(toBelonging);
+        adjacencyList.get(toBelonging)!.push(fromBelonging);
+        edgesData.push({ from, to, fromBelonging, toBelonging, edge });
+      } else {
+        throw new Error('Cannot find starting or ending port of edge');
+      }
+    }
+    // Compute connected components by DFS
+    const unvisited: Set<Port> = new Set(this.ports.values());
+    this.layoutsData = [];
+    const calculateConnectedComponent = (from: Port) => {
+      unvisited.delete(from);
+      const component = this.layoutsData![this.layoutsData!.length - 1];
+      component.ports.push(from);
+      const adjacency = adjacencyList.get(from);
+      if (adjacency) {
+        for (const to of adjacency) {
+          if (unvisited.has(to)) {
+            calculateConnectedComponent(to);
+          }
+        }
+      }
+    };
+    while (unvisited.size) {
+      const node = unvisited.values().next().value;
+      const component: LayoutData = {
+        ports: [],
+        edges: [],
+        children: [],
+      };
+      this.layoutsData.push(component);
+      calculateConnectedComponent(node);
+    }
+    // Classify edges to belonging component
+    const portToComponent: Map<Port, LayoutData> = new Map();
+    for (const component of this.layoutsData) {
+      for (const port of component.ports) {
+        portToComponent.set(port, component);
+      }
+    }
+    for (const edgeData of edgesData) {
+      const {fromBelonging} = edgeData;
+      portToComponent.get(fromBelonging)!.edges.push(edgeData);
+    }
+    // Add children
+    for (const component of this.layoutsData) {
+      component.children = (component.ports as any[])
+        .concat(component.edges.map((x) => x.edge));
+    }
+    // Create layout
+    const componentClass = componentFactory(data.component);
+    if (!this.componentLayout ||
+        this.componentLayout.constructor !== componentClass) {
+      this.componentLayout = new componentClass(this, this);
+    }
+    const layoutClass = layoutFactory(data.layout);
+    const newLayouts: GraphLayout[] = [];
+    for (let i = 0; i < this.layoutsData.length; ++i) {
+      const layout = this.layouts && i < this.layouts.length &&
+        this.layouts[i].constructor === layoutClass ?
+        this.layouts[i] : new layoutClass(this, this.componentLayout);
+      for (const child of this.layoutsData[i].children) {
+        (child as any).parent = layout;
+      }
+      layout.solve(data.layout, this.layoutsData[i], i);
+      newLayouts.push(layout);
+    }
+    this.layouts = newLayouts;
+    this.componentLayout.solve(data.component);
+    const typeClass = graphTypeFactory(data);
+    if (!this.graphType || this.graphType.constructor !== typeClass) {
+      this.graphType = new typeClass(this);
+    }
     this.graphType.setData(data);
   }
   public render() {
@@ -88,7 +176,7 @@ export default class Graph extends Port implements Renderable {
     if (this.ports!.has(id)) {
       return this.ports!.get(id)!;
     }
-    for (const graph of this.graphs!.values()) {
+    for (const graph of this.subgraphs!.values()) {
       if (graph.findBelongingPort(id)) {
         return graph;
       }
@@ -103,22 +191,13 @@ export default class Graph extends Port implements Renderable {
       const node = this.ports!.get(id[0])!;
       return node.findPort(id.slice(1));
     }
-    for (const graph of this.graphs!.values()) {
+    for (const graph of this.subgraphs!.values()) {
       const node = graph.findPort(id);
       if (node) {
         return node;
       }
     }
     return null;
-  }
-  public getPorts() {
-    return this.ports;
-  }
-  public getEdges() {
-    return this.edges;
-  }
-  public getChildren() {
-    return this.children;
   }
   public getBoundingBoxSize() {
     return this.graphType!.getBoundingBoxSize();

@@ -176,6 +176,7 @@ export default class Group extends Vue {
     this.updateCanvasSize();
     globalRoot.addEventListener('render', (data: object[]) => {
       this.rendered = data;
+      // console.log(JSON.stringify(data, null, 2))
     });
   }
   public beforeDestroy() {

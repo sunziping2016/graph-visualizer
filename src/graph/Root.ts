@@ -16,7 +16,7 @@ export default class Root extends EventEmitter {
   public setData(data: RenderableData) {
     const newClass = renderableFactory(data);
     if (this.child === null || this.child.constructor !== newClass) {
-      this.child = new newClass(this, null);
+      this.child = new newClass(this, null, null);
     }
     this.child!.setData(data);
     this.emit('render', [{
@@ -27,7 +27,7 @@ export default class Root extends EventEmitter {
     }]);
   }
   public redraw(data: RenderableData) {
-    this.child = new (renderableFactory(data))(this, null);
+    this.child = new (renderableFactory(data))(this, null, null);
     this.child.setData(data);
     this.emit('render', [{
       key: 'main',

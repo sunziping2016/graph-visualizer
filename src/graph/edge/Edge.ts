@@ -2,6 +2,7 @@ import {EdgeData} from '@/graph/base/data';
 import Root from '@/graph/Root';
 import Renderable from '@/graph/base/Renderable';
 import Positioned from '@/graph/base/Positioned';
+import Graph from '@/graph/graph/Graph';
 
 export default class Edge implements Renderable {
   public static getId(data: EdgeData) {
@@ -10,10 +11,12 @@ export default class Edge implements Renderable {
   public from?: string;
   public to?: string;
   private readonly root: Root;
+  private readonly graph: Graph | null;
   private readonly parent: Positioned | null;
   private id?: string;
-  constructor(root: Root, parent: Positioned | null) {
+  constructor(root: Root, graph: Graph | null, parent: Positioned | null) {
     this.root = root;
+    this.graph = graph;
     this.parent = parent;
   }
   public setData(data: EdgeData) {
@@ -22,8 +25,11 @@ export default class Edge implements Renderable {
     this.to = data.to;
   }
   public render() {
-    const fromNode = this.root.findPort(this.from!.split(':'));
-    const toNode = this.root.findPort(this.to!.split(':'));
+    if (!this.graph) {
+      throw new Error('Top level edge cannot be rendered');
+    }
+    const fromNode = this.graph.findPort(this.from!.split(':'));
+    const toNode = this.graph.findPort(this.to!.split(':'));
     if (!fromNode || !toNode) {
       throw new Error('Unknown start or end node for edge');
     }

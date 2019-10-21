@@ -1,11 +1,13 @@
 import Positioned from '@/graph/base/Positioned';
 import {Size} from '@/graph/base/data';
 import Root from '@/graph/Root';
+import Edge from '@/graph/edge/Edge';
+import Graph from '@/graph/graph/Graph';
 
 export default abstract class Port extends Positioned {
   public readonly root: Root;
   public initialPlaced: boolean; // for graph layout
-  protected id: string;
+  public id: string;
   protected constructor(root: Root, parent: Positioned | null = null) {
     super(parent);
     this.root = root;

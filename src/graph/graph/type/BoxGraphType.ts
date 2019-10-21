@@ -1,6 +1,5 @@
 import GraphType from '@/graph/graph/type/GraphType';
 import Graph from '@/graph/graph/Graph';
-import GraphLayout from '@/graph/graph/layout/GraphLayout';
 import {BoxGraphData, Position, Size} from '@/graph/base/data';
 
 interface BoxGraphConfig {
@@ -38,8 +37,8 @@ export default class BoxGraphType extends GraphType {
   private contentSize?: Size;
   private textPosition?: Position;
   private borderSize?: Size;
-  constructor(parent: Graph, layout: GraphLayout) {
-    super(parent, layout);
+  constructor(parent: Graph) {
+    super(parent);
   }
   public setData(data: BoxGraphData) {
     const newConfig = Object.assign({}, BoxGraphType.defaultConfig, data);
@@ -60,12 +59,12 @@ export default class BoxGraphType extends GraphType {
         height: lines.length * newConfig.fontSize * newConfig.lineHeight,
       };
     }
-    const layoutContentSize = this.layout.getContentSize()!;
+    const layoutContentSize = this.parent.componentLayout!.getContentSize()!;
     this.contentSize = {
       width: layoutContentSize.width + 2 * newConfig.padding,
       height: layoutContentSize.height + 2 * newConfig.padding,
     };
-    this.layout.setPosition({ x: 0, y: 0 });
+    this.parent.componentLayout!.setPosition({ x: 0, y: 0 });
     this.textPosition = { x: 0, y: 0 };
     if (newConfig.label) {
       if (newConfig.labelPosition === 'left' ||
@@ -76,12 +75,12 @@ export default class BoxGraphType extends GraphType {
             2 * newConfig.padding;
         }
         if (newConfig.labelPosition === 'left') {
-          this.layout.getPosition().x = (this.textSize!.width +
+          this.parent.componentLayout!.getPosition().x = (this.textSize!.width +
             newConfig.spaceBetween) / 2;
           this.textPosition.x = -(layoutContentSize.width +
             newConfig.spaceBetween) / 2;
         } else {
-          this.layout.getPosition().x = -(this.textSize!.width +
+          this.parent.componentLayout!.getPosition().x = -(this.textSize!.width +
             newConfig.spaceBetween) / 2;
           this.textPosition.x = (layoutContentSize.width +
             newConfig.spaceBetween) / 2;
@@ -93,12 +92,12 @@ export default class BoxGraphType extends GraphType {
           this.contentSize.width = this.textSize!.width + 2 * newConfig.padding;
         }
         if (newConfig.labelPosition === 'bottom') {
-          this.layout.getPosition().y = -(this.textSize!.height +
+          this.parent.componentLayout!.getPosition().y = -(this.textSize!.height +
             newConfig.spaceBetween) / 2;
           this.textPosition.y = (layoutContentSize.height +
             newConfig.spaceBetween) / 2;
         } else {
-          this.layout.getPosition().y = (this.textSize!.height +
+          this.parent.componentLayout!.getPosition().y = (this.textSize!.height +
             newConfig.spaceBetween) / 2;
           this.textPosition.y = -(layoutContentSize.height +
             newConfig.spaceBetween) / 2;
@@ -144,7 +143,7 @@ export default class BoxGraphType extends GraphType {
       };
       rendered.push(text);
     }
-    rendered.push(this.layout.render());
+    rendered.push(this.parent.componentLayout!.render());
     return rendered;
   }
   public getBoundingBoxSize() {

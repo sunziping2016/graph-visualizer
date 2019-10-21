@@ -4,13 +4,18 @@
   "label": "VFG of stdThreadJoin",
   "layout": {
     "type": "KamadaKawai",
-    "springLength": 150,
+    "springLength": 150
+  },
+  "component": {
     "direction": "LR"
   },
   "children": [
     {
       "type": "graph",
       "id": "cluster_input",
+      "component": {
+        "direction": "TD"
+      },
       "label": "Inputs",
       "style": "filled",
       "fillColor": "darkolivegreen",

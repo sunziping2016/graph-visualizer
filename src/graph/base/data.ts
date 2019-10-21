@@ -100,13 +100,20 @@ export interface EdgeData {
 
 export interface KamadaKawaiGraphLayoutData {
   type: 'KamadaKawai';
-  direction?: 'TD' | 'DT' | 'LR' | 'RL'; // layout direction for components
-  spaceBetween?: number;                 // default 12
   springLength?: number;                 // default 150
   springConstant?: number;               // default 0.05
 }
 
 export type GraphLayoutData = KamadaKawaiGraphLayoutData;
+
+export interface LinearComponentLayoutData {
+  type: 'linear';
+  direction?: 'TD' | 'DT' | 'LR' | 'RL'; // layout direction for components
+                                         // default 'TD'
+  spaceBetween?: number;                 // default 12
+}
+
+export type ComponentLayoutData = LinearComponentLayoutData;
 
 export interface BoxGraphData {
   type: 'graph';
@@ -114,6 +121,7 @@ export interface BoxGraphData {
   id: string;
   children?: RenderableData[];
   layout?: GraphLayoutData;
+  component?: ComponentLayoutData;
   label?: string;
   labelPosition?: 'top' | 'right' | 'bottom' | 'left'; // default top
   style?: 'solid' | 'filled';           // default 'solid'
