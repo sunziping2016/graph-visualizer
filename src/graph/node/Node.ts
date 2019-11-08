@@ -15,6 +15,7 @@ export default class Node extends Port implements Renderable {
     return data.id;
   }
   public readonly graph: Graph | null;
+  public fullId?: string;
   private nodeType?: NodeType;
   constructor(root: Root,
               graph: Graph | null = null,
@@ -24,6 +25,7 @@ export default class Node extends Port implements Renderable {
   }
   public setData(data: NodeData) {
     this.id = Node.getId(data);
+    this.fullId = data.parentId ? `${data.parentId}:${this.id}` : this.id;
     const typeClass = nodeTypeFactory(data);
     if (!this.nodeType || this.nodeType.constructor !== typeClass) {
       this.nodeType = new typeClass(this);
@@ -34,6 +36,8 @@ export default class Node extends Port implements Renderable {
     return {
       is: 'Group',
       key: this.id,
+      draggable: true,
+      fullId: this.fullId,
       config: {
         x: this.position.x,
         y: this.position.y,

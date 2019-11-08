@@ -3,7 +3,7 @@
     <v-stage ref="stage"
              :config="{ width, height, x: width / 2 + x, y: height / 2 + y }"
              @mousedown="mousedown"
-             v-on="mouseDragActive ? { mouseup, mousemove } : {}"
+             v-on="mouseDragActive || draggedId ? { mouseup, mousemove } : {}"
              @wheel="wheel"
     >
       <v-layer v-for="layer of data" :key="layer.key">
@@ -45,6 +45,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import Group from './renderable/Group.vue';
+import {globalRoot} from '@/graph/Root';
 
 Vue.component('Group', Group);
 
@@ -57,6 +58,7 @@ export default class Graph extends Vue {
   private x = 0;
   private y = 0;
   private scale = 1;
+  private draggedId: null | string = null;
   private mouseDragActive = false;
   private mouseLastCoords = {
     x: 0,
@@ -142,7 +144,11 @@ export default class Graph extends Vue {
     this.x = newPos.x - this.width / 2;
     this.y = newPos.y - this.height / 2;
   }
-  public mousedown(e: { evt: WheelEvent }) {
+  public setDraggedIdAndPos(id: string, pos: {x: number, y: number}) {
+    this.draggedId = id;
+    this.mouseLastCoords = pos;
+  }
+  public mousedown(e: { evt: MouseEvent }) {
     this.mouseDragActive = true;
     this.mouseLastCoords = {
       x: e.evt.pageX,
@@ -151,22 +157,32 @@ export default class Graph extends Vue {
   }
   public mouseup() {
     this.mouseDragActive = false;
+    this.draggedId = null;
   }
-  public mousemove(e: { evt: WheelEvent }) {
-    if (e.evt.buttons === 0 || e.evt.which === 0) {
+  public mousemove(e: { evt: MouseEvent }) {
+    if (e.evt.buttons === 0) {
       this.mouseDragActive = false;
     }
-    if (this.mouseDragActive) {
+    if (this.mouseDragActive || this.draggedId) {
       const newCoords = {
         x: e.evt.pageX,
         y: e.evt.pageY,
       };
-      this.x += newCoords.x - this.mouseLastCoords.x;
-      this.y += newCoords.y - this.mouseLastCoords.y;
+      const deltaX = newCoords.x - this.mouseLastCoords.x;
+      const deltaY = newCoords.y - this.mouseLastCoords.y;
+      if (this.draggedId) {
+          globalRoot.moveDraggable(this.draggedId, {
+              deltaX: deltaX / this.scale,
+              deltaY: deltaY / this.scale,
+          });
+      } else {
+        this.x += deltaX;
+        this.y += deltaY;
+      }
       this.mouseLastCoords = newCoords;
     }
   }
-  public thumbnailMousedown(e: { evt: WheelEvent }) {
+  public thumbnailMousedown(e: { evt: MouseEvent }) {
     this.thumbnailMouseDragActive = true;
     this.thumbnailMouseLastCoords = {
       x: e.evt.pageX,
@@ -176,8 +192,8 @@ export default class Graph extends Vue {
   public thumbnailMouseup() {
     this.thumbnailMouseDragActive = false;
   }
-  public thumbnailMousemove(e: { evt: WheelEvent }) {
-    if (e.evt.buttons === 0 || e.evt.which === 0) {
+  public thumbnailMousemove(e: { evt: MouseEvent }) {
+    if (e.evt.buttons === 0) {
       this.thumbnailMouseDragActive = false;
     }
     if (this.thumbnailMouseDragActive) {

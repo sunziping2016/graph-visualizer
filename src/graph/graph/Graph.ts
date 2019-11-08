@@ -20,6 +20,7 @@ export default class Graph extends Port implements Renderable {
     return data.id;
   }
   public readonly graph: Graph | null;
+  public fullId?: string;
   public depth?: number;
   public children?: Map<string, Renderable>;
   public ports?: Map<string, Port>;
@@ -39,6 +40,7 @@ export default class Graph extends Port implements Renderable {
     this.id = Graph.getId(data);
     const newChildren = new Map();
     this.depth = data.depth || 0;
+    this.fullId = data.parentId ? `${data.parentId}:${this.id}` : this.id;
     if (data.children) {
       for (const child of data.children) {
         const type = renderableFactory(child);
@@ -51,6 +53,7 @@ export default class Graph extends Port implements Renderable {
             this.children.get(id)!.constructor === type ?
             this.children.get(id)! : new type(this.root, this, null);
         child.depth = this.depth + 1;
+        child.parentId = this.id;
         newChild.setData(child);
         newChildren.set(id, newChild);
       }
@@ -164,6 +167,8 @@ export default class Graph extends Port implements Renderable {
     return {
       is: 'Group',
       key: this.id,
+      draggable: true,
+      fullId: this.fullId,
       config: {
         x: this.position.x,
         y: this.position.y,

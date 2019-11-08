@@ -39,6 +39,7 @@
             <pre><code>{{ parseError }}</code></pre>
           </div>
           <Graph :width="canvasWidth" :height="canvasHeight" :data="rendered"
+                 ref="graph"
           ></Graph>
         </div>
       </div>
@@ -119,6 +120,7 @@ import {
 } from './graph/Root';
 import 'vue-awesome/icons/upload';
 import 'vue-awesome/icons/sync';
+import _ from 'lodash';
 
 @Component({
   components: {
@@ -126,7 +128,7 @@ import 'vue-awesome/icons/sync';
     Graph,
   },
 })
-export default class Group extends Vue {
+export default class App extends Vue {
   get desktopLayout() {
     return this.windowWidth > 719;
   }
@@ -174,10 +176,10 @@ export default class Group extends Vue {
   public mounted() {
     window.addEventListener('resize', this.getSize);
     this.updateCanvasSize();
-    globalRoot.addEventListener('render', (data: object[]) => {
+    globalRoot.addEventListener('render', _.throttle((data: object[]) => {
       this.rendered = data;
       // console.log(JSON.stringify(data, null, 2))
-    });
+    }, 1000 / 60));
   }
   public beforeDestroy() {
     window.removeEventListener('resize', this.getSize);

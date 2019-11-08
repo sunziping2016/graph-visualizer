@@ -10,6 +10,7 @@ export default class Edge implements Renderable {
   }
   public from?: string;
   public to?: string;
+  public fullId?: string;
   private readonly root: Root;
   private readonly graph: Graph | null;
   private readonly parent: Positioned | null;
@@ -23,6 +24,7 @@ export default class Edge implements Renderable {
     this.id = Edge.getId(data);
     this.from = data.from;
     this.to = data.to;
+    this.fullId = data.parentId ? `${data.parentId}:${this.id}` : this.id;
   }
   public render() {
     if (!this.graph) {

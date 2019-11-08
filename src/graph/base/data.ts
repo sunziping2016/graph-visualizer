@@ -13,6 +13,7 @@ export interface BoxNodeData {
   padding?: number;                     // default 4
   align?: 'left' | 'center' | 'right';  // default 'center'
   depth?: number;                       // for internal use
+  parentId?: string;                    // for internal use
 }
 
 /*
@@ -47,6 +48,7 @@ export interface RecordNodeData {
   padding?: number;                     // default 4
   align?: 'left' | 'center' | 'right';  // default 'center'
   depth?: number;                       // for internal use
+  parentId?: string;                    // for internal use
 }
 
 /*
@@ -81,6 +83,7 @@ export interface TableNodeData {
   fontFamily?: string;                  // default 'sans-serif'
   lineHeight?: number;                  // default 1.2
   depth?: number;                       // for internal use
+  parentId?: string;                    // for internal use
 }
 
 export type NodeData = BoxNodeData | RecordNodeData | TableNodeData;
@@ -96,6 +99,7 @@ export interface EdgeData {
   from: string;                         // starting node for edge
   to: string;                           // ending node for edge
   depth?: number;                       // for internal use
+  parentId?: string;                    // for internal use
 }
 
 export interface KamadaKawaiGraphLayoutData {
@@ -136,6 +140,7 @@ export interface BoxGraphData {
   spaceBetween?: number;                // default 12, space between title and
                                         // content
   depth?: number;                       // for internal use, please leave empty
+  parentId?: string;                    // for internal use
 }
 
 export type GraphData = BoxGraphData;

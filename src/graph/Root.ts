@@ -29,10 +29,29 @@ export default class Root extends EventEmitter {
   public redraw(data: RenderableData) {
     this.child = new (renderableFactory(data))(this, null, null);
     this.child.setData(data);
+    this.refresh();
+  }
+  public moveDraggable(fullId: string,
+                       delta: { deltaX: number, deltaY: number }) {
+    const id = fullId.split(':');
+    // noinspection SuspiciousTypeOfGuard
+    if (this.child instanceof Port) {
+      if (this.child.id !== id[0]) {
+        return null;
+      }
+      const element = this.findPort(id.slice(1));
+      if (element !== null) {
+        element.getPosition().x += delta.deltaX;
+        element.getPosition().y += delta.deltaY;
+        this.refresh();
+      }
+    }
+  }
+  public refresh() {
     this.emit('render', [{
       key: 'main',
       children: [
-        this.child.render(),
+        this.child!.render(),
       ],
     }]);
   }
