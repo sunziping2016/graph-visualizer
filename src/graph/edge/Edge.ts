@@ -3,6 +3,8 @@ import Root from '@/graph/Root';
 import Renderable from '@/graph/base/Renderable';
 import Positioned from '@/graph/base/Positioned';
 import Graph from '@/graph/graph/Graph';
+import EdgeType from '@/graph/edge/type/EdgeType';
+import edgeTypeFactory from '@/graph/edge/type';
 
 export default class Edge implements Renderable {
   public static getId(data: EdgeData) {
@@ -11,10 +13,11 @@ export default class Edge implements Renderable {
   public from?: string;
   public to?: string;
   public fullId?: string;
-  private readonly root: Root;
-  private readonly graph: Graph | null;
-  private readonly parent: Positioned | null;
-  private id?: string;
+  public readonly root: Root;
+  public readonly graph: Graph | null;
+  public readonly parent: Positioned | null;
+  public id?: string;
+  private edgeType?: EdgeType;
   constructor(root: Root, graph: Graph | null, parent: Positioned | null) {
     this.root = root;
     this.graph = graph;
@@ -25,35 +28,13 @@ export default class Edge implements Renderable {
     this.from = data.from;
     this.to = data.to;
     this.fullId = data.parentId ? `${data.parentId}:${this.id}` : this.id;
+    const typeClass = edgeTypeFactory(data);
+    if (!this.edgeType || this.edgeType.constructor !== typeClass) {
+      this.edgeType = new typeClass(this);
+    }
+    this.edgeType.setData(data);
   }
   public render() {
-    if (!this.graph) {
-      throw new Error('Top level edge cannot be rendered');
-    }
-    const fromNode = this.graph.findPort(this.from!.split(':'));
-    const toNode = this.graph.findPort(this.to!.split(':'));
-    if (!fromNode || !toNode) {
-      throw new Error('Unknown start or end node for edge');
-    }
-    const fromPos = fromNode.getAbsolutePosition(this.parent!);
-    const toPos = toNode.getAbsolutePosition(this.parent!);
-    const fromAngle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);
-    const toAngle = Math.PI + fromAngle;
-    const fromDistance = fromNode.distanceToBorder(fromAngle);
-    const toDistance = toNode.distanceToBorder(toAngle);
-    return {
-      is: 'v-line',
-      key: this.id,
-      config: {
-        points: [
-          fromPos.x + fromDistance * Math.cos(fromAngle),
-          fromPos.y + fromDistance * Math.sin(fromAngle),
-          toPos.x + toDistance * Math.cos(toAngle),
-          toPos.y + toDistance * Math.sin(toAngle),
-        ],
-        stroke: 'black',
-        strokeWidth: 1,
-      },
-    };
+    return this.edgeType!.render();
   }
 }

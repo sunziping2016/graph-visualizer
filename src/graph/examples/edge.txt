@@ -1,0 +1,26 @@
+{
+  "type": "graph",
+  "id": "hello",
+  "children": [
+    {
+      "type": "node",
+      "id": "0",
+      "label": "0",
+      "shape": "box"
+    },
+    {
+      "type": "node",
+      "id": "1",
+      "label": "1",
+      "shape": "box"
+    },
+    {
+      "type": "edge",
+      "from": "0",
+      "to": "1",
+      "lineWidth": 5,
+      "pointerWidth": 20,
+      "pointerHeight": 30
+    }
+  ]
+}

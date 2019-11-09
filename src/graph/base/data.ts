@@ -1,7 +1,12 @@
-export interface BoxNodeData {
+export interface CommonNodeData {
   type: 'node';
-  shape: 'box';
   id: string;
+  depth?: number;                       // for internal use
+  parentId?: string;                    // for internal use
+}
+
+export interface BoxNodeData extends CommonNodeData {
+  shape: 'box';
   label?: string;
   style?: 'solid' | 'filled';           // default 'solid'
   fillColor?: string;                   // default 'white'
@@ -12,8 +17,6 @@ export interface BoxNodeData {
   lineHeight?: number;                  // default 1.2
   padding?: number;                     // default 4
   align?: 'left' | 'center' | 'right';  // default 'center'
-  depth?: number;                       // for internal use
-  parentId?: string;                    // for internal use
 }
 
 /*
@@ -32,10 +35,8 @@ export interface BoxNodeData {
  * The string enclosed in the angle brackets is port, which is used to refer
  * to that cell.
  */
-export interface RecordNodeData {
-  type: 'node';
+export interface RecordNodeData extends CommonNodeData {
   shape: 'record';
-  id: string;
   label: string;                        // see above
   direction: 'horizontal' | 'vertical'; // default 'horizontal'
   style?: 'solid' | 'filled';           // default 'solid'
@@ -47,8 +48,6 @@ export interface RecordNodeData {
   lineHeight?: number;                  // default 1.2
   padding?: number;                     // default 4
   align?: 'left' | 'center' | 'right';  // default 'center'
-  depth?: number;                       // for internal use
-  parentId?: string;                    // for internal use
 }
 
 /*
@@ -74,16 +73,12 @@ export interface RecordNodeData {
  * - `bgcolor`: background color of the cell.
  * - `port`: id of the cell, used to refer to that cell.
  */
-export interface TableNodeData {
-  type: 'node';
+export interface TableNodeData extends CommonNodeData {
   shape: 'table';
-  id: string;
   label: string;                        // see above
   fontSize?: number;                    // default 12
   fontFamily?: string;                  // default 'sans-serif'
   lineHeight?: number;                  // default 1.2
-  depth?: number;                       // for internal use
-  parentId?: string;                    // for internal use
 }
 
 export type NodeData = BoxNodeData | RecordNodeData | TableNodeData;
@@ -93,7 +88,7 @@ export type NodeData = BoxNodeData | RecordNodeData | TableNodeData;
  * Graph id may be omitted. For example, assuming node `n` is in graph `d`,
  * node `n` can be referred as both `d:n` and `n`.
  */
-export interface EdgeData {
+export interface CommonEdgeData {
   type: 'edge';
   id?: string;
   from: string;                         // starting node for edge
@@ -102,6 +97,19 @@ export interface EdgeData {
   parentId?: string;                    // for internal use
 }
 
+export interface StraightEdgeData extends CommonEdgeData {
+  shape: 'straight';
+  fromPointer?: boolean;                // default false
+  toPointer?: boolean;                  // default true
+  lineColor?: string;                   // default 'black'
+  lineWidth?: number;                   // default 1
+  pointerColor?: string;                // default 'black'
+  pointerWidth?: number;                // default 10
+  pointerHeight?: number;               // default 15
+}
+
+export type EdgeData = StraightEdgeData;
+
 export interface KamadaKawaiGraphLayoutData {
   type: 'KamadaKawai';
   springLength?: number;                 // default 150
@@ -109,6 +117,17 @@ export interface KamadaKawaiGraphLayoutData {
 }
 
 export type GraphLayoutData = KamadaKawaiGraphLayoutData;
+
+export interface BarnesHutGraphPhysicsData {
+  type: 'BarnesHut';
+  theta?: number;                        // default 0.5
+  gravitationalConstant?: number;        // default -2000
+  centralGravity?: number;               // default 0.3
+  springLength?: number;                 // default 95
+  springConstant?: number;               // default 0.04
+}
+
+export type GraphPhysicsData = BarnesHutGraphPhysicsData;
 
 export interface LinearComponentLayoutData {
   type: 'linear';
@@ -119,13 +138,17 @@ export interface LinearComponentLayoutData {
 
 export type ComponentLayoutData = LinearComponentLayoutData;
 
-export interface BoxGraphData {
+export interface CommonGraphData {
   type: 'graph';
-  shape: 'box';
   id: string;
   children?: RenderableData[];
   layout?: GraphLayoutData;
+  physics?: GraphPhysicsData;
   component?: ComponentLayoutData;
+}
+
+export interface BoxGraphData extends CommonGraphData {
+  shape: 'box';
   label?: string;
   labelPosition?: 'top' | 'right' | 'bottom' | 'left'; // default top
   style?: 'solid' | 'filled';           // default 'solid'

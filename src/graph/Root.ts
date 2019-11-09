@@ -3,9 +3,21 @@ import { RenderableData } from '@/graph/base/data';
 import renderableFactory from '@/graph/base/renderableFactory';
 
 export default class Root extends EventEmitter {
-  public ctx: CanvasRenderingContext2D = document.createElement('canvas')
-    .getContext('2d')!;
-  public child: Renderable | null = null;
+  public ctx: CanvasRenderingContext2D;
+  public child: Renderable | null;
+  public stepTimer: number;
+  public constructor() {
+    super();
+    this.ctx = document.createElement('canvas').getContext('2d')!;
+    this.child = null;
+    this.stepTimer = setInterval(() => {
+      if (this.child instanceof Graph) {
+        if (this.child.step()) {
+          this.refresh();
+        }
+      }
+    }, 1000 / 60);
+  }
   public findPort(id: string[]) {
     // noinspection SuspiciousTypeOfGuard
     if (this.child instanceof Port) {
@@ -19,12 +31,7 @@ export default class Root extends EventEmitter {
       this.child = new newClass(this, null, null);
     }
     this.child!.setData(data);
-    this.emit('render', [{
-      key: 'main',
-      children: [
-        this.child!.render(),
-      ],
-    }]);
+    this.refresh();
   }
   public redraw(data: RenderableData) {
     this.child = new (renderableFactory(data))(this, null, null);
@@ -73,8 +80,10 @@ import recordJson from '!raw-loader!./examples/record.txt';
 import subGraphJson from '!raw-loader!./examples/subgraph.txt';
 import icosahedronJson from '!raw-loader!./examples/icosahedron.txt';
 import tableJson from '!raw-loader!./examples/table.txt';
+import edgeJson from '!raw-loader!./examples/edge.txt';
 import Renderable from '@/graph/base/Renderable';
 import Port from '@/graph/base/Port';
+import Graph from '@/graph/graph/Graph';
 
 interface Example {
   name: string;
@@ -112,5 +121,10 @@ export const globalExamples: Example[] = [
     name: 'table',
     parser: 'json',
     content: tableJson,
+  },
+  {
+    name: 'edge',
+    parser: 'json',
+    content: edgeJson,
   },
 ];

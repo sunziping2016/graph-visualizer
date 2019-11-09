@@ -20,11 +20,11 @@ export default class Group extends Vue {
   @Prop(Boolean) public readonly draggable: boolean | undefined;
   @Prop(String) public readonly fullId: string | undefined;
   public mousedown(evt: { evt: MouseEvent, cancelBubble: boolean }) {
-      evt.cancelBubble = true;
-      if (this.fullId) {
-          (this.$root.$children[0].$refs.graph as any).setDraggedIdAndPos(
-              this.fullId, { x: evt.evt.pageX, y: evt.evt.pageY });
-      }
+    evt.cancelBubble = true;
+    if (this.fullId) {
+      (this.$root.$children[0].$refs.graph as any).setDraggedIdAndPos(
+          this.fullId, { x: evt.evt.pageX, y: evt.evt.pageY });
+    }
   }
 }
 </script>

@@ -10,7 +10,7 @@ interface KamadaKawaiGraphLayoutConfig {
 }
 
 export default class KamadaKawaiGraphLayout extends GraphLayout {
-  private static defaultConfig = {
+  private static defaultConfig: KamadaKawaiGraphLayoutConfig = {
     springLength: 150,
     springConstant: 0.05,
   };

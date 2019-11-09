@@ -46,8 +46,10 @@
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import Group from './renderable/Group.vue';
 import {globalRoot} from '@/graph/Root';
+import Pointer from '@/components/renderable/Pointer.vue';
 
 Vue.component('Group', Group);
+Vue.component('Pointer', Pointer);
 
 @Component
 export default class Graph extends Vue {

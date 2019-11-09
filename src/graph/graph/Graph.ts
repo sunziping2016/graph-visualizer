@@ -11,6 +11,8 @@ import Positioned from '@/graph/base/Positioned';
 import GraphLayout, {LayoutData, LayoutEdgeData} from '@/graph/graph/layout/GraphLayout';
 import ComponentLayout from '@/graph/graph/component/ComponentLayout';
 import GraphType from '@/graph/graph/type/GraphType';
+import GraphPhysics from '@/graph/graph/physics/GraphPhysics';
+import physicsFactory from '@/graph/graph/physics';
 
 export default class Graph extends Port implements Renderable {
   public static getId(data: GraphData) {
@@ -27,6 +29,7 @@ export default class Graph extends Port implements Renderable {
   public subgraphs?: Map<string, Graph>;
   public edges?: Map<string, Edge>;
   public layouts?: GraphLayout[];
+  public physics?: GraphPhysics[];
   public layoutsData?: LayoutData[];
   public componentLayout?: ComponentLayout;
   private graphType?: GraphType;
@@ -53,7 +56,7 @@ export default class Graph extends Port implements Renderable {
             this.children.get(id)!.constructor === type ?
             this.children.get(id)! : new type(this.root, this, null);
         child.depth = this.depth + 1;
-        child.parentId = this.id;
+        child.parentId = this.fullId;
         newChild.setData(child);
         newChildren.set(id, newChild);
       }
@@ -144,24 +147,50 @@ export default class Graph extends Port implements Renderable {
       this.componentLayout = new componentClass(this, this);
     }
     const layoutClass = layoutFactory(data.layout);
+    const physicsClass = physicsFactory(data.physics);
     const newLayouts: GraphLayout[] = [];
+    const newPhysics: GraphPhysics[] = [];
     for (let i = 0; i < this.layoutsData.length; ++i) {
       const layout = this.layouts && i < this.layouts.length &&
         this.layouts[i].constructor === layoutClass ?
         this.layouts[i] : new layoutClass(this, this.componentLayout);
+      const physics = this.physics && i < this.physics.length &&
+        this.physics[i].constructor === physicsClass ?
+        this.physics[i] : new physicsClass(this, layout);
       for (const child of this.layoutsData[i].children) {
         (child as any).parent = layout;
       }
       layout.solve(data.layout, this.layoutsData[i], i);
+      physics.solve(data.physics, this.layoutsData[i]);
       newLayouts.push(layout);
+      newPhysics.push(physics);
     }
     this.layouts = newLayouts;
+    this.physics = newPhysics;
     this.componentLayout.solve(data.component);
     const typeClass = graphTypeFactory(data);
     if (!this.graphType || this.graphType.constructor !== typeClass) {
       this.graphType = new typeClass(this);
     }
     this.graphType.setData(data);
+  }
+  public step(): boolean {
+    let updated = false;
+    if (this.subgraphs) {
+      for (const subgraph of this.subgraphs.values()) {
+        if (subgraph.step()) {
+          updated = true;
+        }
+      }
+    }
+    if (this.physics) {
+      for (const physics of this.physics) {
+        if (physics.step()) {
+          updated = true;
+        }
+      }
+    }
+    return updated;
   }
   public render() {
     return {
