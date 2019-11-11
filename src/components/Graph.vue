@@ -1,57 +1,66 @@
 <template>
   <div class="graph-container">
-    <v-stage ref="stage"
-             :config="{ width, height, x: width / 2 + x, y: height / 2 + y }"
-             @mousedown="mousedown"
-             v-on="mouseDragActive || draggedId ? { mouseup, mousemove } : {}"
-             @wheel="wheel"
+    <my-canvas ref="mainCanvas" :width="width" :height="height" :enable-hit="true"
+               @mousedown="mousedown"
     >
-      <v-layer v-for="layer of data" :key="layer.key">
-        <component v-for="component of layer.children"
-                   :is="component.is"
-                   :key="component.key"
-                   v-bind="component"
-        ></component>
-      </v-layer>
-    </v-stage>
+      <my-group :x="-100" :y="50" :scale-x="1.4" :scale-y="0.6">
+        <my-rect :x="width / 4" :y="height / 4" :width="width / 2" :height="height / 2" fill="yellow" stroke="black" id="test" :draggable="true"></my-rect>
+      </my-group>
+    </my-canvas>
+<!--    <v-stage ref="stage"-->
+<!--             :config="{ width, height, x: width / 2 + x, y: height / 2 + y }"-->
+<!--             @mousedown="mousedown"-->
+<!--             v-on="mouseDragActive || draggedId ? { mouseup, mousemove } : {}"-->
+<!--             @wheel="wheel"-->
+<!--    >-->
+<!--      <v-layer v-for="layer of data" :key="layer.key">-->
+<!--        <component v-for="component of layer.children"-->
+<!--                   :is="component.is"-->
+<!--                   :key="component.key"-->
+<!--                   v-bind="component"-->
+<!--        ></component>-->
+<!--      </v-layer>-->
+<!--    </v-stage>-->
     <div class="thumbnail" :style="{
       width: thumbnailWidth + 'px',
       height: thumbnailHeight + 'px',
     }">
-      <v-stage ref="thumbnailStage"
-               :config="{ width: thumbnailWidth, height: thumbnailHeight,
-               x: thumbnailWidth / 2, y: thumbnailHeight / 2 }"
-               v-on="thumbnailMouseDragActive ? {
-                 mouseup: thumbnailMouseup,
-                 mousemove: thumbnailMousemove
-               } : {}"
-      >
-        <v-layer v-for="layer of data" :key="layer.key">
-          <component v-for="component of layer.children"
-                     :is="component.is"
-                     :key="component.key"
-                     v-bind="component"
-          ></component>
-          <v-shape :config="thumbnailViewportBackgroundConfig"></v-shape>
-          <v-rect :config="thumbnailViewportConfig"
-                  @mousedown="thumbnailMousedown"
-          ></v-rect>
-        </v-layer>
-      </v-stage>
+<!--      <my-canvas :width="thumbnailWidth" :height="thumbnailHeight">-->
+<!--      </my-canvas>-->
+<!--      <v-stage ref="thumbnailStage"-->
+<!--               :config="{ width: thumbnailWidth, height: thumbnailHeight,-->
+<!--               x: thumbnailWidth / 2, y: thumbnailHeight / 2 }"-->
+<!--               v-on="thumbnailMouseDragActive ? {-->
+<!--                 mouseup: thumbnailMouseup,-->
+<!--                 mousemove: thumbnailMousemove-->
+<!--               } : {}"-->
+<!--      >-->
+<!--        <v-layer v-for="layer of data" :key="layer.key">-->
+<!--          <component v-for="component of layer.children"-->
+<!--                     :is="component.is"-->
+<!--                     :key="component.key"-->
+<!--                     v-bind="component"-->
+<!--          ></component>-->
+<!--          <v-shape :config="thumbnailViewportBackgroundConfig"></v-shape>-->
+<!--          <v-rect :config="thumbnailViewportConfig"-->
+<!--                  @mousedown="thumbnailMousedown"-->
+<!--          ></v-rect>-->
+<!--        </v-layer>-->
+<!--      </v-stage>-->
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
-import Group from './renderable/Group.vue';
 import {globalRoot} from '@/graph/Root';
-import Pointer from '@/components/renderable/Pointer.vue';
-import QuadraticLine from '@/components/renderable/QuadraticLine.vue';
+import MyCanvas from '@/components/renderable/MyCanvas.vue';
+import MyRect from '@/components/renderable/MyRect.vue';
+import MyGroup from '@/components/renderable/MyGroup.vue';
 
-Vue.component('Group', Group);
-Vue.component('Pointer', Pointer);
-Vue.component('QuadraticLine', QuadraticLine);
+Vue.component('MyCanvas', MyCanvas);
+Vue.component('MyRect', MyRect);
+Vue.component('MyGroup', MyGroup);
 
 @Component
 export default class Graph extends Vue {
@@ -127,37 +136,53 @@ export default class Graph extends Vue {
   }
   public updateThumbnailScale() {
     const scale = 1 / this.thumbnailFactor;
-    (this.$refs.thumbnailStage as any).getStage().scale({ x: scale, y: scale });
+    // (this.$refs.thumbnailStage as any).getStage().scale({ x: scale, y: scale });
   }
   public wheel(e: { evt: WheelEvent }) {
     const scaleBy = 1.1;
     e.evt.preventDefault();
-    const stage = (this.$refs.stage as any).getStage();
-    const mousePointTo = {
-      x: (stage.getPointerPosition().x - stage.x()) / this.scale,
-      y: (stage.getPointerPosition().y - stage.y()) / this.scale,
-    };
-    this.scale = e.evt.deltaY < 0 ? this.scale * scaleBy :
-      this.scale / scaleBy;
-    const newPos = {
-      x: -(mousePointTo.x - stage.getPointerPosition().x / this.scale) *
-        this.scale,
-      y: -(mousePointTo.y - stage.getPointerPosition().y / this.scale) *
-        this.scale,
-    };
-    this.x = newPos.x - this.width / 2;
-    this.y = newPos.y - this.height / 2;
+    // const stage = (this.$refs.stage as any).getStage();
+    // const mousePointTo = {
+    //   x: (stage.getPointerPosition().x - stage.x()) / this.scale,
+    //   y: (stage.getPointerPosition().y - stage.y()) / this.scale,
+    // };
+    // this.scale = e.evt.deltaY < 0 ? this.scale * scaleBy :
+    //   this.scale / scaleBy;
+    // const newPos = {
+    //   x: -(mousePointTo.x - stage.getPointerPosition().x / this.scale) *
+    //     this.scale,
+    //   y: -(mousePointTo.y - stage.getPointerPosition().y / this.scale) *
+    //     this.scale,
+    // };
+    // this.x = newPos.x - this.width / 2;
+    // this.y = newPos.y - this.height / 2;
   }
   public setDraggedIdAndPos(id: string, pos: {x: number, y: number}) {
     this.draggedId = id;
     this.mouseLastCoords = pos;
   }
-  public mousedown(e: { evt: MouseEvent }) {
+  public translateMouseEvent(e: MouseEvent): {x: number, y: number} {
+    let elementOffsetX = 0;
+    let elementOffsetY = 0;
+    let target = e.currentTarget;
+    while (target) {
+      elementOffsetX += (target as HTMLElement).offsetLeft;
+      elementOffsetY += (target as HTMLElement).offsetTop;
+      target = (target as HTMLElement).offsetParent;
+    }
+    return {
+      x: e.pageX - elementOffsetX,
+      y: e.pageY - elementOffsetY,
+    };
+  }
+  public mousedown(e: MouseEvent) {
     this.mouseDragActive = true;
     this.mouseLastCoords = {
-      x: e.evt.pageX,
-      y: e.evt.pageY,
+      x: e.pageX,
+      y: e.pageY,
     };
+    // const pos = this.translateMouseEvent(e);
+    // console.log((this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y));
   }
   public mouseup() {
     this.mouseDragActive = false;

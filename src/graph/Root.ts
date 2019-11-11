@@ -55,12 +55,7 @@ export default class Root extends EventEmitter {
     }
   }
   public refresh() {
-    this.emit('render', [{
-      key: 'main',
-      children: [
-        this.child!.render(),
-      ],
-    }]);
+    this.emit('render', [this.child!.render()]);
   }
 }
 
