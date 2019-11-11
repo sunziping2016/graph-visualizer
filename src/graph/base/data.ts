@@ -97,8 +97,7 @@ export interface CommonEdgeData {
   parentId?: string;                    // for internal use
 }
 
-export interface StraightEdgeData extends CommonEdgeData {
-  shape: 'straight';
+export interface CommonLineEdgeData extends CommonEdgeData {
   fromPointer?: boolean;                // default false
   toPointer?: boolean;                  // default true
   lineColor?: string;                   // default 'black'
@@ -108,7 +107,15 @@ export interface StraightEdgeData extends CommonEdgeData {
   pointerHeight?: number;               // default 15
 }
 
-export type EdgeData = StraightEdgeData;
+export interface StraightEdgeData extends CommonLineEdgeData {
+  shape: 'straight';
+}
+
+export interface QuadraticEdgeData extends CommonLineEdgeData {
+  shape: 'quadratic';
+}
+
+export type EdgeData = StraightEdgeData | QuadraticEdgeData;
 
 export interface KamadaKawaiGraphLayoutData {
   type: 'KamadaKawai';

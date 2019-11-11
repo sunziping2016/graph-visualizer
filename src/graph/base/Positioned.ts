@@ -1,9 +1,9 @@
 import {Position} from '@/graph/base/data';
 
-export default abstract class Positioned {
+export default class Positioned {
   public parent: Positioned | null;
   protected position: Position;
-  protected constructor(parent: Positioned | null) {
+  public constructor(parent: Positioned | null) {
     this.parent = parent;
     this.position = { x: 0, y: 0 };
   }

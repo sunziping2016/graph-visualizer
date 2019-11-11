@@ -47,9 +47,11 @@ import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import Group from './renderable/Group.vue';
 import {globalRoot} from '@/graph/Root';
 import Pointer from '@/components/renderable/Pointer.vue';
+import QuadraticLine from '@/components/renderable/QuadraticLine.vue';
 
 Vue.component('Group', Group);
 Vue.component('Pointer', Pointer);
+Vue.component('QuadraticLine', QuadraticLine);
 
 @Component
 export default class Graph extends Vue {
