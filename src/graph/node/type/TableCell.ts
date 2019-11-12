@@ -99,44 +99,38 @@ export default class TableCell extends Port {
   }
   public render() {
     const rect = {
-      is: 'v-rect',
+      is: 'MyRect',
       key: 'rect',
-      config: {
-        x: -this.cellSize!.width / 2,
-        y: -this.cellSize!.height / 2,
-        width: this.cellSize!.width,
-        height: this.cellSize!.height,
-        fill: this.config!.backgroundColor,
-        stroke: this.config!.border > 0 ? 'black' : undefined,
-        strokeWidth: this.config!.border,
-      },
+      x: -this.cellSize!.width / 2,
+      y: -this.cellSize!.height / 2,
+      width: this.cellSize!.width,
+      height: this.cellSize!.height,
+      fill: this.config!.backgroundColor,
+      stroke: this.config!.border > 0 ? 'black' : undefined,
+      strokeWidth: this.config!.border,
     };
     const rendered: object[] = [rect];
     if (this.label) {
       const parentConfig = this.nodeType.getConfig()!;
       const text = {
-        is: 'v-text',
+        is: 'MyText',
         key: 'text',
-        config: {
-          x: -this.contentSize!.width / 2,
-          y: -this.contentSize!.height / 2,
-          text: this.label,
-          fontSize: parentConfig.fontSize,
-          fontFamily: parentConfig.fontFamily,
-          lineHeight: parentConfig.lineHeight,
-          padding: this.nodeType.getTableConfig()!.cellPadding,
-          align: 'center',
-        },
+        x: -this.contentSize!.width / 2,
+        y: -this.contentSize!.height / 2,
+        text: this.label,
+        fontSize: parentConfig.fontSize,
+        fontFamily: parentConfig.fontFamily,
+        lineHeight: parentConfig.lineHeight,
+        padding: this.nodeType.getTableConfig()!.cellPadding,
+        align: 'center',
       };
       rendered.push(text);
     }
     return {
-      is: 'Group',
+      is: 'MyGroup',
       key: `cell-${this.rowOffset}-${this.columnOffset}`,
-      config: {
-        x: this.position.x,
-        y: this.position.y,
-      },
+      x: this.position.x,
+      y: this.position.y,
       children: rendered,
     };
   }

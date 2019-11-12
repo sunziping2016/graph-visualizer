@@ -211,17 +211,15 @@ export default class TableNodeType extends NodeType {
   public render() {
     const rendered = [];
     rendered.push( {
-      is: 'v-rect',
+      is: 'MyRect',
       key: 'rect',
-      config: {
-        x: -this.contentSize!.width / 2 - this.tableConfig!.cellSpacing,
-        y: -this.contentSize!.height / 2 - this.tableConfig!.cellSpacing,
-        width: this.contentSize!.width + 2 * this.tableConfig!.cellSpacing,
-        height: this.contentSize!.height + 2 * this.tableConfig!.cellSpacing,
-        fill: 'white',
-        stroke: this.tableConfig!.border > 0 ? 'black' : undefined,
-        strokeWidth: this.tableConfig!.border,
-      },
+      x: -this.contentSize!.width / 2 - this.tableConfig!.cellSpacing,
+      y: -this.contentSize!.height / 2 - this.tableConfig!.cellSpacing,
+      width: this.contentSize!.width + 2 * this.tableConfig!.cellSpacing,
+      height: this.contentSize!.height + 2 * this.tableConfig!.cellSpacing,
+      fill: 'white',
+      stroke: this.tableConfig!.border > 0 ? 'black' : undefined,
+      strokeWidth: this.tableConfig!.border,
     });
     for (const row of this.table!) {
       for (const cell of row) {

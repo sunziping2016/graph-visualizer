@@ -34,14 +34,12 @@ export default class Node extends Port implements Renderable {
   }
   public render() {
     return {
-      is: 'Group',
+      is: 'MyGroup',
       key: this.id,
       draggable: true,
-      fullId: this.fullId,
-      config: {
-        x: this.position.x,
-        y: this.position.y,
-      },
+      id: this.fullId,
+      x: this.position.x,
+      y: this.position.y,
       children: this.nodeType!.render(),
     };
   }

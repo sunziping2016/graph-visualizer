@@ -1,52 +1,23 @@
 <template>
   <div class="graph-container">
-    <my-canvas ref="mainCanvas" :width="width" :height="height" :enable-hit="true"
-               @mousedown="mousedown"
-    >
-      <my-group :x="-100" :y="50" :scale-x="1.4" :scale-y="0.6">
-        <my-rect :x="width / 4" :y="height / 4" :width="width / 2" :height="height / 2" fill="yellow" stroke="black" id="test" :draggable="true"></my-rect>
-      </my-group>
-    </my-canvas>
-<!--    <v-stage ref="stage"-->
-<!--             :config="{ width, height, x: width / 2 + x, y: height / 2 + y }"-->
-<!--             @mousedown="mousedown"-->
-<!--             v-on="mouseDragActive || draggedId ? { mouseup, mousemove } : {}"-->
-<!--             @wheel="wheel"-->
-<!--    >-->
-<!--      <v-layer v-for="layer of data" :key="layer.key">-->
-<!--        <component v-for="component of layer.children"-->
-<!--                   :is="component.is"-->
-<!--                   :key="component.key"-->
-<!--                   v-bind="component"-->
-<!--        ></component>-->
-<!--      </v-layer>-->
-<!--    </v-stage>-->
+    <my-canvas ref="mainCanvas" :width="width" :height="height"
+               :data="mainCanvasData" :enable-hit="true"
+               @mousedown="mousedown" @wheel="wheel"
+               v-on="mouseDragActive ? { mouseup, mousemove } : {}"
+    ></my-canvas>
     <div class="thumbnail" :style="{
       width: thumbnailWidth + 'px',
       height: thumbnailHeight + 'px',
     }">
-<!--      <my-canvas :width="thumbnailWidth" :height="thumbnailHeight">-->
-<!--      </my-canvas>-->
-<!--      <v-stage ref="thumbnailStage"-->
-<!--               :config="{ width: thumbnailWidth, height: thumbnailHeight,-->
-<!--               x: thumbnailWidth / 2, y: thumbnailHeight / 2 }"-->
-<!--               v-on="thumbnailMouseDragActive ? {-->
-<!--                 mouseup: thumbnailMouseup,-->
-<!--                 mousemove: thumbnailMousemove-->
-<!--               } : {}"-->
-<!--      >-->
-<!--        <v-layer v-for="layer of data" :key="layer.key">-->
-<!--          <component v-for="component of layer.children"-->
-<!--                     :is="component.is"-->
-<!--                     :key="component.key"-->
-<!--                     v-bind="component"-->
-<!--          ></component>-->
-<!--          <v-shape :config="thumbnailViewportBackgroundConfig"></v-shape>-->
-<!--          <v-rect :config="thumbnailViewportConfig"-->
-<!--                  @mousedown="thumbnailMousedown"-->
-<!--          ></v-rect>-->
-<!--        </v-layer>-->
-<!--      </v-stage>-->
+      <my-canvas ref="thumbnailCanvas"
+                 :width="thumbnailWidth" :height="thumbnailHeight"
+                 :data="thumbnailCanvasData" :enable-hit="true"
+                 @mousedown="thumbnailMousedown"
+                 v-on="thumbnailMouseDragActive ? {
+                   mouseup: thumbnailMouseup,
+                   mousemove: thumbnailMousemove,
+                 } : {}"
+      ></my-canvas>
     </div>
   </div>
 </template>
@@ -55,12 +26,9 @@
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import {globalRoot} from '@/graph/Root';
 import MyCanvas from '@/components/renderable/MyCanvas.vue';
-import MyRect from '@/components/renderable/MyRect.vue';
-import MyGroup from '@/components/renderable/MyGroup.vue';
+import Port from '@/graph/base/Port';
 
 Vue.component('MyCanvas', MyCanvas);
-Vue.component('MyRect', MyRect);
-Vue.component('MyGroup', MyGroup);
 
 @Component
 export default class Graph extends Vue {
@@ -71,95 +39,130 @@ export default class Graph extends Vue {
   private x = 0;
   private y = 0;
   private scale = 1;
+  private size = { width: 0, height: 0 };
   private draggedId: null | string = null;
   private mouseDragActive = false;
   private mouseLastCoords = {
     x: 0,
     y: 0,
   };
+  private maxThumbnailLength = 160;
+  private minThumbnailLength = 100;
+  private thumbnailPadding = 10;
   private thumbnailMouseDragActive = false;
   private thumbnailMouseLastCoords = {
     x: 0,
     y: 0,
   };
+  get stageX() {
+    return this.width / 2 + this.x;
+  }
+  get stageY() {
+    return this.height / 2 + this.y;
+  }
   public mounted() {
-    this.updateThumbnailScale();
+    this.updateSize();
   }
-  @Watch('scale')
-  public onScaleChanged() {
-    const stage = (this.$refs.stage as any).getStage();
-    stage.scale({ x: this.scale, y: this.scale });
-    stage.draw();
+  @Watch('data')
+  public onDataChanged() {
+    this.updateSize();
   }
-  @Watch('thumbnailFactor')
-  public onThumbnailFactorChanged() {
-    this.updateThumbnailScale();
+  public updateSize() {
+    // noinspection SuspiciousTypeOfGuard
+    if (globalRoot.child instanceof Port) {
+      this.size = globalRoot.child.getBoundingBoxSize();
+    }
   }
-  get thumbnailFactor() {
-    return Math.min(this.width, this.height) > 600 ? 5 : 4;
-  }
-  get thumbnailWidth() {
-    return this.width / this.thumbnailFactor;
-  }
-  get thumbnailHeight() {
-    return this.height / this.thumbnailFactor;
-  }
-  get thumbnailViewportConfig() {
+  get mainCanvasData() {
     return {
-      x: (-this.width / 2 - this.x) / this.scale,
-      y: (-this.height / 2 - this.y) / this.scale,
-      width: this.width / this.scale,
-      height: this.height / this.scale,
+      is: 'group',
+      x: this.stageX,
+      y: this.stageY,
+      scaleX: this.scale,
+      scaleY: this.scale,
+      children: this.data,
+    };
+  }
+  get thumbnailCanvasData() {
+    const scale = 1 / this.thumbnailFactor;
+    function deepCopyAndRemoveDraggable(shape: any) {
+      const copy = Object.assign({}, shape);
+      if (copy.draggable) {
+        delete copy.draggable;
+      }
+      if (copy.children) {
+        copy.children = copy.children.map((x: any) =>
+          deepCopyAndRemoveDraggable(x));
+      }
+      return copy;
+    }
+    const data = this.data.map((x: any) => deepCopyAndRemoveDraggable(x));
+    const viewportX = (-this.width / 2 - this.x) / this.scale;
+    const viewportY = (-this.height / 2 - this.y) / this.scale;
+    const viewportWidth = this.width / this.scale;
+    const viewportHeight = this.height / this.scale;
+    data.push({
+      is: 'rectWithWhole',
+      id: 'mask',
+      fill: 'rgba(0,0,0,0.2)',
+      outerLeft: -this.thumbnailWidth * this.thumbnailFactor / 2,
+      outerRight: this.thumbnailWidth * this.thumbnailFactor / 2,
+      outerTop: -this.thumbnailHeight * this.thumbnailFactor / 2,
+      outerBottom: this.thumbnailHeight * this.thumbnailFactor / 2,
+      innerLeft: viewportX,
+      innerRight: viewportX + viewportWidth,
+      innerTop: viewportY,
+      innerBottom: viewportY + viewportHeight,
+    });
+    data.push({
+      is: 'rect',
+      id: 'viewport',
+      draggable: true,
+      x: viewportX,
+      y: viewportY,
+      width: viewportWidth,
+      height: viewportHeight,
       stroke: '#3eaf7c',
       strokeWidth: this.thumbnailFactor,
-    };
-  }
-  get thumbnailViewportBackgroundConfig() {
-    const viewport = this.thumbnailViewportConfig;
+    });
     return {
-      fill: 'rgba(0,0,0,0.2)',
-      sceneFunc: (ctx: any, shape: any) => {
-        ctx.beginPath();
-        ctx.moveTo(-this.width / 2, -this.height / 2);
-        ctx.lineTo(this.width / 2, -this.height / 2);
-        ctx.lineTo(this.width / 2, this.height / 2);
-        ctx.lineTo(-this.width / 2, this.height / 2);
-        ctx.lineTo(-this.width / 2, -this.height / 2);
-        ctx.moveTo(viewport.x, viewport.y);
-        ctx.lineTo(viewport.x, viewport.y + viewport.height);
-        ctx.lineTo(viewport.x + viewport.width, viewport.y + viewport.height);
-        ctx.lineTo(viewport.x + viewport.width, viewport.y);
-        ctx.lineTo(viewport.x, viewport.y);
-        ctx.fillStrokeShape(shape);
-      },
+      is: 'group',
+      x: this.thumbnailWidth / 2,
+      y: this.thumbnailHeight / 2,
+      scaleX: scale,
+      scaleY: scale,
+      children: data,
     };
   }
-  public updateThumbnailScale() {
-    const scale = 1 / this.thumbnailFactor;
-    // (this.$refs.thumbnailStage as any).getStage().scale({ x: scale, y: scale });
+  get thumbnailFactor() {
+    return Math.max(this.size.width / this.maxThumbnailLength,
+      this.size.height / this.maxThumbnailLength, 1);
   }
-  public wheel(e: { evt: WheelEvent }) {
+  get thumbnailWidth() {
+    return Math.max(this.size.width / this.thumbnailFactor,
+      this.minThumbnailLength) + 2 * this.thumbnailPadding;
+  }
+  get thumbnailHeight() {
+    return Math.max(this.size.height / this.thumbnailFactor,
+      this.minThumbnailLength) + 2 * this.thumbnailPadding;
+  }
+  public wheel(e: WheelEvent) {
     const scaleBy = 1.1;
-    e.evt.preventDefault();
-    // const stage = (this.$refs.stage as any).getStage();
-    // const mousePointTo = {
-    //   x: (stage.getPointerPosition().x - stage.x()) / this.scale,
-    //   y: (stage.getPointerPosition().y - stage.y()) / this.scale,
-    // };
-    // this.scale = e.evt.deltaY < 0 ? this.scale * scaleBy :
-    //   this.scale / scaleBy;
-    // const newPos = {
-    //   x: -(mousePointTo.x - stage.getPointerPosition().x / this.scale) *
-    //     this.scale,
-    //   y: -(mousePointTo.y - stage.getPointerPosition().y / this.scale) *
-    //     this.scale,
-    // };
-    // this.x = newPos.x - this.width / 2;
-    // this.y = newPos.y - this.height / 2;
-  }
-  public setDraggedIdAndPos(id: string, pos: {x: number, y: number}) {
-    this.draggedId = id;
-    this.mouseLastCoords = pos;
+    e.preventDefault();
+    const pos = this.translateMouseEvent(e);
+    const mousePointTo = {
+      x: (pos.x - this.stageX) / this.scale,
+      y: (pos.y - this.stageY) / this.scale,
+    };
+    this.scale = e.deltaY < 0 ? this.scale * scaleBy : this.scale / scaleBy;
+    const newPos = {
+      x: -(mousePointTo.x - pos.x / this.scale) *
+        this.scale,
+      y: -(mousePointTo.y - pos.y / this.scale) *
+        this.scale,
+    };
+    this.x = newPos.x - this.width / 2;
+    this.y = newPos.y - this.height / 2;
   }
   public translateMouseEvent(e: MouseEvent): {x: number, y: number} {
     let elementOffsetX = 0;
@@ -181,21 +184,24 @@ export default class Graph extends Vue {
       x: e.pageX,
       y: e.pageY,
     };
-    // const pos = this.translateMouseEvent(e);
-    // console.log((this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y));
+    const pos = this.translateMouseEvent(e);
+    const id = (this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y);
+    if (id) {
+      this.draggedId = id;
+    }
   }
   public mouseup() {
     this.mouseDragActive = false;
     this.draggedId = null;
   }
-  public mousemove(e: { evt: MouseEvent }) {
-    if (e.evt.buttons === 0) {
+  public mousemove(e: MouseEvent) {
+    if (e.buttons === 0) {
       this.mouseDragActive = false;
     }
     if (this.mouseDragActive || this.draggedId) {
       const newCoords = {
-        x: e.evt.pageX,
-        y: e.evt.pageY,
+        x: e.pageX,
+        y: e.pageY,
       };
       const deltaX = newCoords.x - this.mouseLastCoords.x;
       const deltaY = newCoords.y - this.mouseLastCoords.y;
@@ -211,24 +217,29 @@ export default class Graph extends Vue {
       this.mouseLastCoords = newCoords;
     }
   }
-  public thumbnailMousedown(e: { evt: MouseEvent }) {
-    this.thumbnailMouseDragActive = true;
-    this.thumbnailMouseLastCoords = {
-      x: e.evt.pageX,
-      y: e.evt.pageY,
-    };
+  public thumbnailMousedown(e: MouseEvent) {
+    const pos = this.translateMouseEvent(e);
+    const id = (this.$refs.thumbnailCanvas as any)
+      .getIdFromHitPoint(pos.x, pos.y);
+    if (id === 'viewport') {
+      this.thumbnailMouseDragActive = true;
+      this.thumbnailMouseLastCoords = {
+        x: e.pageX,
+        y: e.pageY,
+      };
+    }
   }
   public thumbnailMouseup() {
     this.thumbnailMouseDragActive = false;
   }
-  public thumbnailMousemove(e: { evt: MouseEvent }) {
-    if (e.evt.buttons === 0) {
+  public thumbnailMousemove(e: MouseEvent) {
+    if (e.buttons === 0) {
       this.thumbnailMouseDragActive = false;
     }
     if (this.thumbnailMouseDragActive) {
       const newCoords = {
-        x: e.evt.pageX,
-        y: e.evt.pageY,
+        x: e.pageX,
+        y: e.pageY,
       };
       const oldCoords = this.thumbnailMouseLastCoords;
       const scale = this.thumbnailFactor * this.scale;

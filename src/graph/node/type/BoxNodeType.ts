@@ -72,35 +72,31 @@ export default class BoxNodeType extends NodeType {
   }
   public render() {
     const rect = {
-      is: 'v-rect',
+      is: 'MyRect',
       key: 'rect',
-      config: {
-        x: -this.contentSize!.width / 2,
-        y: -this.contentSize!.height / 2,
-        width: this.contentSize!.width,
-        height: this.contentSize!.height,
-        fill: this.config!.style === 'filled' ?
-          this.config!.fillColor : undefined,
-        stroke: this.config!.strokeWidth > 0 ?
-          this.config!.strokeColor : undefined,
-        strokeWidth: this.config!.strokeWidth,
-      },
+      x: -this.contentSize!.width / 2,
+      y: -this.contentSize!.height / 2,
+      width: this.contentSize!.width,
+      height: this.contentSize!.height,
+      fill: this.config!.style === 'filled' ?
+        this.config!.fillColor : undefined,
+      stroke: this.config!.strokeWidth > 0 ?
+        this.config!.strokeColor : undefined,
+      strokeWidth: this.config!.strokeWidth,
     };
     const rendered: object[] = [rect];
     if (this.config!.label) {
       const text = {
-        is: 'v-text',
+        is: 'MyText',
         key: 'text',
-        config: {
-          x: -this.contentSize!.width / 2,
-          y: -this.contentSize!.height / 2,
-          text: this.config!.label,
-          fontSize: this.config!.fontSize,
-          fontFamily: this.config!.fontFamily,
-          lineHeight: this.config!.lineHeight,
-          padding: this.config!.padding,
-          align: this.config!.align,
-        },
+        x: -this.contentSize!.width / 2,
+        y: -this.contentSize!.height / 2,
+        text: this.config!.label,
+        fontSize: this.config!.fontSize,
+        fontFamily: this.config!.fontFamily,
+        lineHeight: this.config!.lineHeight,
+        padding: this.config!.padding,
+        align: this.config!.align,
       };
       rendered.push(text);
     }

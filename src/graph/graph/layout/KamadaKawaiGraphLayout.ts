@@ -238,12 +238,10 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
   } // solve method
   public render() {
     return {
-      is: 'Group',
+      is: 'MyGroup',
       key: `component-${this.index}`,
-      config: {
-        x: this.position.x,
-        y: this.position.y,
-      },
+      x: this.position.x,
+      y: this.position.y,
       children: this.data!.children.map((x) => x.render()),
     };
   }

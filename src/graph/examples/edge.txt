@@ -15,12 +15,24 @@
       "shape": "box"
     },
     {
+      "type": "node",
+      "id": "2",
+      "label": "2",
+      "shape": "box"
+    },
+    {
       "type": "edge",
       "from": "0",
       "to": "1",
       "lineWidth": 5,
       "pointerWidth": 20,
       "pointerHeight": 30
+    },
+    {
+      "type": "edge",
+      "from": "1",
+      "to": "2",
+      "shape": "straight"
     }
   ]
 }

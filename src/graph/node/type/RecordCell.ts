@@ -105,45 +105,39 @@ export default class RecordCell extends Port {
       const config = this.nodeType.getConfig()!;
       rendered = [
         {
-          is: 'v-rect',
+          is: 'MyRect',
           key: 'rect',
-          config: {
-            x: -this.cellSize!.width / 2,
-            y: -this.cellSize!.height / 2,
-            width: this.cellSize!.width,
-            height: this.cellSize!.height,
-            fill: config.style === 'filled' ? config.fillColor : undefined,
-            stroke: config.strokeWidth > 0 ? config.strokeColor : undefined,
-            strokeWidth: config.strokeWidth,
-          },
+          x: -this.cellSize!.width / 2,
+          y: -this.cellSize!.height / 2,
+          width: this.cellSize!.width,
+          height: this.cellSize!.height,
+          fill: config.style === 'filled' ? config.fillColor : undefined,
+          stroke: config.strokeWidth > 0 ? config.strokeColor : undefined,
+          strokeWidth: config.strokeWidth,
         },
       ];
       if (this.label) {
         rendered.push({
-          is: 'v-text',
+          is: 'MyText',
           key: 'text',
-          config: {
-            x: -this.contentSize!.width / 2,
-            y: -this.contentSize!.height / 2,
-            text: this.label,
-            fontSize: config.fontSize,
-            fontFamily: config.fontFamily,
-            lineHeight: config.lineHeight,
-            padding: config.padding,
-            align: config.align,
-          },
+          x: -this.contentSize!.width / 2,
+          y: -this.contentSize!.height / 2,
+          text: this.label,
+          fontSize: config.fontSize,
+          fontFamily: config.fontFamily,
+          lineHeight: config.lineHeight,
+          padding: config.padding,
+          align: config.align,
         });
       }
     } else {
       rendered = this.children!.map((x, i) => {
         const position = x.getPosition();
         return {
-          is: 'Group',
+          is: 'MyGroup',
           key: `record-${i}`,
-          config: {
-            x: position.x,
-            y: position.y,
-          },
+          x: position.x,
+          y: position.y,
           children: x.render(),
         };
       });

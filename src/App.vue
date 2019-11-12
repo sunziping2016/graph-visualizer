@@ -178,7 +178,8 @@ export default class App extends Vue {
     this.updateCanvasSize();
     globalRoot.addEventListener('render', _.throttle((data: object[]) => {
       this.rendered = data;
-      // console.log(JSON.stringify(data, null, 2))
+      /* tslint:disable:no-console */
+      // console.log(JSON.stringify(data, null, 2));
     }, 1000 / 60));
   }
   public beforeDestroy() {

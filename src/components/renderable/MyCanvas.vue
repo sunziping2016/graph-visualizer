@@ -1,13 +1,13 @@
 <template>
-  <div :style="{ width, height }" style="position: relative">
+  <div :style="{ width, height, position: 'relative' }">
     <canvas ref="hitCanvas"
             v-if="enableHit"
-            :style="{ display: 'none'}"
+            style="position: absolute; display: none"
     ></canvas>
     <canvas ref="canvas"
+            style="position: absolute"
             v-on="$listeners"
     ></canvas>
-    <slot></slot>
   </div>
 </template>
 
@@ -20,10 +20,12 @@ export default class MyCanvas extends Vue {
   @Prop({ type: Number, required: true }) public readonly width!: number;
   @Prop({ type: Number, required: true }) public readonly height!: number;
   @Prop(Boolean) public readonly enableHit: boolean | undefined;
+  @Prop(Object) public readonly data: object | undefined;
   @Provide() public provider: CanvasProvider = {
     context: null,
     hitContext: null,
     hitColorMap: {},
+    hitIdMap: {},
   };
   public mounted() {
     this.provider.context = (this.$refs.canvas as HTMLCanvasElement)
@@ -37,17 +39,11 @@ export default class MyCanvas extends Vue {
       (this.$refs.hitCanvas as HTMLCanvasElement).height = this.height;
     }
   }
-  public beforeUpdate() {
-    if (this.provider.context) {
-      this.provider.context.clearRect(0, 0, this.width, this.height);
-    }
-    if (this.provider.hitContext) {
-      this.provider.hitContext.clearRect(0, 0, this.width, this.height);
-      this.provider.hitColorMap = {};
-    }
-  }
   @Provide()
   public generateHitColor(id: string): string {
+    if (this.provider.hitIdMap[id]) {
+      return this.provider.hitIdMap[id];
+    }
     while (true) {
       const r = Math.round(Math.random() * 255);
       const g = Math.round(Math.random() * 255);
@@ -55,8 +51,168 @@ export default class MyCanvas extends Vue {
       const color = `rgb(${r},${g},${b})`;
       if (!this.provider.hitColorMap[color]) {
         this.provider.hitColorMap[color] = id;
+        this.provider.hitIdMap[id] = color;
         return color;
       }
+    }
+  }
+  public updateCanvas() {
+    if (!this.provider.context) {
+      return;
+    }
+    const ctx: CanvasRenderingContext2D = this.provider.context;
+    const hitCtx = this.provider.hitContext;
+    ctx.clearRect(0, 0, this.width, this.height);
+    if (hitCtx) {
+      hitCtx.clearRect(0, 0, this.width, this.height);
+      this.provider.hitColorMap = {};
+      this.provider.hitIdMap = {};
+    }
+    const updateShape = (shape: any,
+                         draggable: boolean,
+                         draggableId: string) => {
+      switch (shape.is) {
+        case 'group': case 'MyGroup': {
+          ctx.save();
+          ctx.translate(shape.x || 0, shape.y || 0);
+          ctx.scale(shape.scaleX || 1, shape.scaleY || 1);
+          if (hitCtx) {
+            hitCtx.save();
+            hitCtx.translate(shape.x || 0, shape.y || 0);
+            hitCtx.scale(shape.scaleX || 1, shape.scaleY || 1);
+          }
+          if (shape.children) {
+            for (const childShape of shape.children) {
+              updateShape(childShape, shape.draggable || draggable,
+                shape.id || draggableId);
+            }
+          }
+          ctx.restore();
+          if (hitCtx) {
+            hitCtx.restore();
+          }
+          break;
+        }
+        case 'rect': case 'MyRect': {
+          ctx.beginPath();
+          ctx.rect(shape.x || 0, shape.y || 0,
+            shape.width || 0, shape.height || 0);
+          if (shape.fill) {
+            ctx.fillStyle = shape.fill;
+            ctx.fill();
+          }
+          if (shape.stroke) {
+            ctx.lineWidth = shape.strokeWidth || 1;
+            ctx.strokeStyle = shape.stroke;
+            ctx.stroke();
+          }
+          const finalDraggable = shape.draggable ||
+            (shape.draggable !== false && draggable);
+          const finalId = shape.id || draggableId;
+          if (hitCtx && finalDraggable && finalId) {
+            const color = this.generateHitColor(finalId);
+            hitCtx.beginPath();
+            hitCtx.rect(shape.x || 0, shape.y || 0,
+              shape.width || 0, shape.height || 0);
+            hitCtx.fillStyle = color;
+            hitCtx.fill();
+            if (shape.stroke) {
+              hitCtx.lineWidth = shape.strokeWidth || 1;
+              hitCtx.strokeStyle = color;
+              hitCtx.stroke();
+            }
+          }
+          break;
+        }
+        case 'text': case 'MyText': {
+          const fontSize = shape.fontSize || 12;
+          const lineHeight = shape.lineHeight || 1.2;
+          const padding = shape.padding || 4;
+          ctx.font = `${fontSize}px ${shape.fontFamily || 'sans-serif'}`;
+          const lines = shape.text ? shape.text.split('\n') : [];
+          const linesWidth = lines.map((x: string) => ctx.measureText(x).width);
+          const width = Math.max(...linesWidth, 0);
+          let posY = (shape.y || 0) + padding;
+          ctx.textBaseline = 'top';
+          ctx.fillStyle = shape.fill || 'black';
+          for (let i = 0; i < lines.length; ++i) {
+            let posX = (shape.x || 0) + padding;
+            if (shape.align === 'left') {
+              // do nothing
+            } else if (shape.align === 'right') {
+              posX += width - linesWidth[i];
+            } else {
+              posX += (width - linesWidth[i]) / 2;
+            }
+            ctx.fillText(lines[i], posX,
+              posY + 0.5 * (lineHeight - 1) * fontSize);
+            posY += lineHeight * fontSize;
+          }
+          break;
+        }
+        case 'line': case 'MyLine': {
+          const points = shape.points || [];
+          ctx.strokeStyle = shape.stroke || 'black';
+          ctx.lineWidth = shape.strokeWidth || 1;
+          ctx.beginPath();
+          ctx.moveTo(points[0] || 0, points[1] || 0);
+          ctx.lineTo(points[2] || 0, points[3] || 0);
+          ctx.stroke();
+          break;
+        }
+        case 'quadraticLine': case 'MyQuadraticLine': {
+          const points = shape.points || [];
+          ctx.strokeStyle = shape.stroke || 'black';
+          ctx.lineWidth = shape.strokeWidth || 1;
+          ctx.beginPath();
+          ctx.moveTo(points[0] || 0, points[1] || 0);
+          ctx.quadraticCurveTo(points[2] || 0, points[3] || 0,
+            points[4] || 0, points[5] || 0);
+          ctx.stroke();
+          break;
+        }
+        case 'pointer': case 'MyPointer': {
+          const x = shape.x || 0;
+          const y = shape.y || 0;
+          const angle = shape.angle || 0;
+          const width = shape.width || 10;
+          const height = shape.height || 15;
+          const middleX = x + height * Math.cos(angle);
+          const middleY = y + height * Math.sin(angle);
+          const deltaX = width / 2 * Math.sin(angle);
+          const deltaY = -width / 2 * Math.cos(angle);
+          ctx.fillStyle = shape.fill || 'black';
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(middleX + deltaX, middleY + deltaY);
+          ctx.lineTo(middleX - deltaX, middleY - deltaY);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        }
+        case 'rectWithWhole': {
+          const points = shape.points || [];
+          ctx.beginPath();
+          ctx.moveTo(shape.outerLeft || 0, shape.outerTop || 0);
+          ctx.lineTo(shape.outerRight || 0, shape.outerTop || 0);
+          ctx.lineTo(shape.outerRight || 0, shape.outerBottom || 0);
+          ctx.lineTo(shape.outerLeft || 0, shape.outerBottom || 0);
+          ctx.lineTo(shape.outerLeft || 0, shape.outerTop || 0);
+          ctx.moveTo(shape.innerLeft || 0, shape.innerTop || 0);
+          ctx.lineTo(shape.innerLeft || 0, shape.innerBottom || 0);
+          ctx.lineTo(shape.innerRight || 0, shape.innerBottom || 0);
+          ctx.lineTo(shape.innerRight || 0, shape.innerTop || 0);
+          ctx.lineTo(shape.innerLeft || 0, shape.innerTop || 0);
+          ctx.fillStyle = shape.fill || 'white';
+          ctx.fill();
+          break;
+        }
+        default:
+          throw new Error(`Unknown shape: ${shape.is}`);
+      }
+    };
+    if (this.data) {
+      updateShape(this.data, false, '');
     }
   }
   public getIdFromHitPoint(x: number, y: number): string | undefined {
@@ -72,6 +228,7 @@ export default class MyCanvas extends Vue {
     if (this.enableHit) {
       (this.$refs.hitCanvas as HTMLCanvasElement).width = this.width;
     }
+    this.updateCanvas();
   }
   @Watch('height')
   public onHeightChanged() {
@@ -79,6 +236,11 @@ export default class MyCanvas extends Vue {
     if (this.enableHit) {
       (this.$refs.hitCanvas as HTMLCanvasElement).height = this.height;
     }
+    this.updateCanvas();
+  }
+  @Watch('data')
+  public onDataChanged() {
+    this.updateCanvas();
   }
 }
 

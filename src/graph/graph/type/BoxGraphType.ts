@@ -5,7 +5,7 @@ import {BoxGraphData, Position, Size} from '@/graph/base/data';
 interface BoxGraphConfig {
   label: string | null;
   labelPosition: 'top' | 'right' | 'bottom' | 'left';
-  style: 'solid' | 'filled';
+  style: 'solid' | 'filled' | 'none';
   fillColor: string;
   strokeColor: string;
   strokeWidth: number;
@@ -21,7 +21,7 @@ export default class BoxGraphType extends GraphType {
   public static defaultConfig = {
     label: null,
     labelPosition: 'top', // or 'right', 'bottom', 'left'
-    style: 'solid',  // or 'filled'
+    style: 'none',  // or 'filled'
     fillColor: 'white',
     strokeColor: 'black',
     strokeWidth: 0,
@@ -111,10 +111,11 @@ export default class BoxGraphType extends GraphType {
     this.config = newConfig;
   }
   public render() {
-    const rect = {
-      is: 'v-rect',
-      key: 'rect',
-      config: {
+    const rendered: object[] = [];
+    if (this.config!.style && this.config!.style !== 'none') {
+      const rect = {
+        is: 'MyRect',
+        key: 'rect',
         x: -this.contentSize!.width / 2,
         y: -this.contentSize!.height / 2,
         width: this.contentSize!.width,
@@ -124,22 +125,20 @@ export default class BoxGraphType extends GraphType {
         stroke: this.config!.strokeWidth > 0 ?
           this.config!.strokeColor : undefined,
         strokeWidth: this.config!.strokeWidth,
-      },
-    };
-    const rendered: object[] = [rect];
+      };
+      rendered.push(rect);
+    }
     if (this.config!.label) {
       const text = {
-        is: 'v-text',
+        is: 'MyText',
         key: 'text',
-        config: {
-          x: this.textPosition!.x - this.textSize!.width / 2,
-          y: this.textPosition!.y - this.textSize!.height / 2,
-          text: this.config!.label,
-          fontSize: this.config!.fontSize,
-          fontFamily: this.config!.fontFamily,
-          lineHeight: this.config!.lineHeight,
-          align: this.config!.align,
-        },
+        x: this.textPosition!.x - this.textSize!.width / 2,
+        y: this.textPosition!.y - this.textSize!.height / 2,
+        text: this.config!.label,
+        fontSize: this.config!.fontSize,
+        fontFamily: this.config!.fontFamily,
+        lineHeight: this.config!.lineHeight,
+        align: this.config!.align,
       };
       rendered.push(text);
     }

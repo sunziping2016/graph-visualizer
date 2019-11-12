@@ -47,7 +47,7 @@ export default class StraightEdgeType extends EdgeType {
     const children: object[] = [];
     if (this.config!.fromPointer) {
       children.push({
-        is: 'Pointer',
+        is: 'MyPointer',
         key: 'toPointer',
         x: realFromPosX,
         y: realFromPosY,
@@ -61,7 +61,7 @@ export default class StraightEdgeType extends EdgeType {
     }
     if (this.config!.toPointer) {
       children.push({
-        is: 'Pointer',
+        is: 'MyPointer',
         key: 'toPointer',
         x: realToPosX,
         y: realToPosY,
@@ -74,18 +74,16 @@ export default class StraightEdgeType extends EdgeType {
       realToPosY += this.config!.pointerWidth * Math.sin(toAngle);
     }
     children.unshift({
-      is: 'v-line',
+      is: 'MyLine',
       key: 'line',
-      config: {
-        points: [
-          realFromPosX, realFromPosY, realToPosX, realToPosY,
-        ],
-        stroke: this.config!.lineColor,
-        strokeWidth: this.config!.lineWidth,
-      },
+      points: [
+        realFromPosX, realFromPosY, realToPosX, realToPosY,
+      ],
+      stroke: this.config!.lineColor,
+      strokeWidth: this.config!.lineWidth,
     });
     return {
-      is: 'Group',
+      is: 'MyGroup',
       key: this.parent.id,
       children,
     };

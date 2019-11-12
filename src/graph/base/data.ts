@@ -158,7 +158,7 @@ export interface BoxGraphData extends CommonGraphData {
   shape: 'box';
   label?: string;
   labelPosition?: 'top' | 'right' | 'bottom' | 'left'; // default top
-  style?: 'solid' | 'filled';           // default 'solid'
+  style?: 'solid' | 'filled' | 'none';  // default 'none'
   fillColor?: string;                   // default 'white'
   strokeColor?: string;                 // default 'black'
   strokeWidth?: number;                 // default 0
