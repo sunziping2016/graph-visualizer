@@ -194,8 +194,7 @@ export default class Graph extends Port implements Renderable {
   }
   public render() {
     return {
-      is: 'MyGroup',
-      key: this.id,
+      is: 'group',
       draggable: true,
       id: this.fullId,
       x: this.position.x,

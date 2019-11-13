@@ -25,12 +25,14 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import {globalRoot} from '@/graph/Root';
-import MyCanvas from '@/components/renderable/MyCanvas.vue';
+import MyCanvas from '@/components/MyCanvas.vue';
 import Port from '@/graph/base/Port';
 
-Vue.component('MyCanvas', MyCanvas);
-
-@Component
+@Component({
+  components: {
+    MyCanvas,
+  },
+})
 export default class Graph extends Vue {
   @Prop({ type: Number, required: true }) public readonly width!: number;
   @Prop({ type: Number, required: true }) public readonly height!: number;

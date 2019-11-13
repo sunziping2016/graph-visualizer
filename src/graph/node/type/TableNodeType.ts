@@ -211,8 +211,7 @@ export default class TableNodeType extends NodeType {
   public render() {
     const rendered = [];
     rendered.push( {
-      is: 'MyRect',
-      key: 'rect',
+      is: 'rect',
       x: -this.contentSize!.width / 2 - this.tableConfig!.cellSpacing,
       y: -this.contentSize!.height / 2 - this.tableConfig!.cellSpacing,
       width: this.contentSize!.width + 2 * this.tableConfig!.cellSpacing,

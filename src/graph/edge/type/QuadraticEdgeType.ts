@@ -57,8 +57,7 @@ export default class QuadraticEdgeType extends EdgeType {
     const children: object[] = [];
     if (this.config!.fromPointer) {
       children.push({
-        is: 'MyPointer',
-        key: 'toPointer',
+        is: 'pointer',
         x: realFromPosX,
         y: realFromPosY,
         angle: fromAngle,
@@ -71,8 +70,7 @@ export default class QuadraticEdgeType extends EdgeType {
     }
     if (this.config!.toPointer) {
       children.push({
-        is: 'MyPointer',
-        key: 'toPointer',
+        is: 'pointer',
         x: realToPosX,
         y: realToPosY,
         angle: toAngle,
@@ -84,8 +82,7 @@ export default class QuadraticEdgeType extends EdgeType {
       realToPosY += this.config!.pointerWidth * Math.sin(toAngle);
     }
     children.unshift({
-      is: 'MyQuadraticLine',
-      key: 'line',
+      is: 'quadraticLine',
       points: [
         realFromPosX, realFromPosY,
         this.controlPoint.getPosition().x,
@@ -96,8 +93,7 @@ export default class QuadraticEdgeType extends EdgeType {
       strokeWidth: this.config!.lineWidth,
     });
     return {
-      is: 'MyGroup',
-      key: this.parent.id,
+      is: 'group',
       children,
     };
   }

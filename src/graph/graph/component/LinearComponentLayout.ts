@@ -64,8 +64,7 @@ export default class LinearComponentLayout extends ComponentLayout {
   }
   public render() {
     return {
-      is: 'MyGroup',
-      key: `components`,
+      is: 'group',
       x: this.position.x,
       y: this.position.y,
       children: this.graph.layouts!.map((x) => x.render()),

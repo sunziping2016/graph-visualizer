@@ -99,8 +99,7 @@ export default class TableCell extends Port {
   }
   public render() {
     const rect = {
-      is: 'MyRect',
-      key: 'rect',
+      is: 'rect',
       x: -this.cellSize!.width / 2,
       y: -this.cellSize!.height / 2,
       width: this.cellSize!.width,
@@ -113,8 +112,7 @@ export default class TableCell extends Port {
     if (this.label) {
       const parentConfig = this.nodeType.getConfig()!;
       const text = {
-        is: 'MyText',
-        key: 'text',
+        is: 'text',
         x: -this.contentSize!.width / 2,
         y: -this.contentSize!.height / 2,
         text: this.label,
@@ -127,8 +125,7 @@ export default class TableCell extends Port {
       rendered.push(text);
     }
     return {
-      is: 'MyGroup',
-      key: `cell-${this.rowOffset}-${this.columnOffset}`,
+      is: 'group',
       x: this.position.x,
       y: this.position.y,
       children: rendered,

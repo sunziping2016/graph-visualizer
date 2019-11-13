@@ -72,8 +72,7 @@ export default class BoxNodeType extends NodeType {
   }
   public render() {
     const rect = {
-      is: 'MyRect',
-      key: 'rect',
+      is: 'rect',
       x: -this.contentSize!.width / 2,
       y: -this.contentSize!.height / 2,
       width: this.contentSize!.width,
@@ -87,8 +86,7 @@ export default class BoxNodeType extends NodeType {
     const rendered: object[] = [rect];
     if (this.config!.label) {
       const text = {
-        is: 'MyText',
-        key: 'text',
+        is: 'text',
         x: -this.contentSize!.width / 2,
         y: -this.contentSize!.height / 2,
         text: this.config!.label,

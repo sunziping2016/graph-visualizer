@@ -238,8 +238,7 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
   } // solve method
   public render() {
     return {
-      is: 'MyGroup',
-      key: `component-${this.index}`,
+      is: 'group',
       x: this.position.x,
       y: this.position.y,
       children: this.data!.children.map((x) => x.render()),

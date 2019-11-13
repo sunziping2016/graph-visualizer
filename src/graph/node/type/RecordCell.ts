@@ -105,8 +105,7 @@ export default class RecordCell extends Port {
       const config = this.nodeType.getConfig()!;
       rendered = [
         {
-          is: 'MyRect',
-          key: 'rect',
+          is: 'rect',
           x: -this.cellSize!.width / 2,
           y: -this.cellSize!.height / 2,
           width: this.cellSize!.width,
@@ -118,8 +117,7 @@ export default class RecordCell extends Port {
       ];
       if (this.label) {
         rendered.push({
-          is: 'MyText',
-          key: 'text',
+          is: 'text',
           x: -this.contentSize!.width / 2,
           y: -this.contentSize!.height / 2,
           text: this.label,
@@ -134,8 +132,7 @@ export default class RecordCell extends Port {
       rendered = this.children!.map((x, i) => {
         const position = x.getPosition();
         return {
-          is: 'MyGroup',
-          key: `record-${i}`,
+          is: 'group',
           x: position.x,
           y: position.y,
           children: x.render(),

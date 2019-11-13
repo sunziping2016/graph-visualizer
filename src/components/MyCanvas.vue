@@ -13,7 +13,6 @@
 
 <script lang="ts">
 import {Vue, Component, Provide, Prop, Watch} from 'vue-property-decorator';
-import CanvasProvider from '@/components/renderable/CanvasProvider';
 
 @Component
 export default class MyCanvas extends Vue {
@@ -21,19 +20,17 @@ export default class MyCanvas extends Vue {
   @Prop({ type: Number, required: true }) public readonly height!: number;
   @Prop(Boolean) public readonly enableHit: boolean | undefined;
   @Prop(Object) public readonly data: object | undefined;
-  @Provide() public provider: CanvasProvider = {
-    context: null,
-    hitContext: null,
-    hitColorMap: {},
-    hitIdMap: {},
-  };
+  private context: CanvasRenderingContext2D | null = null;
+  private hitContext: CanvasRenderingContext2D | null = null;
+  private hitColorMap: { [color: string]: string } = {};
+  private hitIdMap: { [id: string]: string } = {};
   public mounted() {
-    this.provider.context = (this.$refs.canvas as HTMLCanvasElement)
+    this.context = (this.$refs.canvas as HTMLCanvasElement)
       .getContext('2d');
     (this.$refs.canvas as HTMLCanvasElement).width = this.width;
     (this.$refs.canvas as HTMLCanvasElement).height = this.height;
     if (this.enableHit) {
-      this.provider.hitContext = (this.$refs.hitCanvas as HTMLCanvasElement)
+      this.hitContext = (this.$refs.hitCanvas as HTMLCanvasElement)
         .getContext('2d');
       (this.$refs.hitCanvas as HTMLCanvasElement).width = this.width;
       (this.$refs.hitCanvas as HTMLCanvasElement).height = this.height;
@@ -41,38 +38,38 @@ export default class MyCanvas extends Vue {
   }
   @Provide()
   public generateHitColor(id: string): string {
-    if (this.provider.hitIdMap[id]) {
-      return this.provider.hitIdMap[id];
+    if (this.hitIdMap[id]) {
+      return this.hitIdMap[id];
     }
     while (true) {
       const r = Math.round(Math.random() * 255);
       const g = Math.round(Math.random() * 255);
       const b = Math.round(Math.random() * 255);
       const color = `rgb(${r},${g},${b})`;
-      if (!this.provider.hitColorMap[color]) {
-        this.provider.hitColorMap[color] = id;
-        this.provider.hitIdMap[id] = color;
+      if (!this.hitColorMap[color]) {
+        this.hitColorMap[color] = id;
+        this.hitIdMap[id] = color;
         return color;
       }
     }
   }
   public updateCanvas() {
-    if (!this.provider.context) {
+    if (!this.context) {
       return;
     }
-    const ctx: CanvasRenderingContext2D = this.provider.context;
-    const hitCtx = this.provider.hitContext;
+    const ctx: CanvasRenderingContext2D = this.context;
+    const hitCtx = this.hitContext;
     ctx.clearRect(0, 0, this.width, this.height);
     if (hitCtx) {
       hitCtx.clearRect(0, 0, this.width, this.height);
-      this.provider.hitColorMap = {};
-      this.provider.hitIdMap = {};
+      this.hitColorMap = {};
+      this.hitIdMap = {};
     }
     const updateShape = (shape: any,
                          draggable: boolean,
                          draggableId: string) => {
       switch (shape.is) {
-        case 'group': case 'MyGroup': {
+        case 'group': {
           ctx.save();
           ctx.translate(shape.x || 0, shape.y || 0);
           ctx.scale(shape.scaleX || 1, shape.scaleY || 1);
@@ -93,7 +90,7 @@ export default class MyCanvas extends Vue {
           }
           break;
         }
-        case 'rect': case 'MyRect': {
+        case 'rect': {
           ctx.beginPath();
           ctx.rect(shape.x || 0, shape.y || 0,
             shape.width || 0, shape.height || 0);
@@ -150,7 +147,7 @@ export default class MyCanvas extends Vue {
           }
           break;
         }
-        case 'line': case 'MyLine': {
+        case 'line': {
           const points = shape.points || [];
           ctx.strokeStyle = shape.stroke || 'black';
           ctx.lineWidth = shape.strokeWidth || 1;
@@ -160,7 +157,7 @@ export default class MyCanvas extends Vue {
           ctx.stroke();
           break;
         }
-        case 'quadraticLine': case 'MyQuadraticLine': {
+        case 'quadraticLine': {
           const points = shape.points || [];
           ctx.strokeStyle = shape.stroke || 'black';
           ctx.lineWidth = shape.strokeWidth || 1;
@@ -191,7 +188,6 @@ export default class MyCanvas extends Vue {
           break;
         }
         case 'rectWithWhole': {
-          const points = shape.points || [];
           ctx.beginPath();
           ctx.moveTo(shape.outerLeft || 0, shape.outerTop || 0);
           ctx.lineTo(shape.outerRight || 0, shape.outerTop || 0);
@@ -216,10 +212,10 @@ export default class MyCanvas extends Vue {
     }
   }
   public getIdFromHitPoint(x: number, y: number): string | undefined {
-    if (this.provider.hitContext) {
-      const pixel = this.provider.hitContext.getImageData(x, y, 1, 1).data;
+    if (this.hitContext) {
+      const pixel = this.hitContext.getImageData(x, y, 1, 1).data;
       const color = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
-      return this.provider.hitColorMap[color];
+      return this.hitColorMap[color];
     }
   }
   @Watch('width')

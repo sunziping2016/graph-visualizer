@@ -114,8 +114,7 @@ export default class BoxGraphType extends GraphType {
     const rendered: object[] = [];
     if (this.config!.style && this.config!.style !== 'none') {
       const rect = {
-        is: 'MyRect',
-        key: 'rect',
+        is: 'rect',
         x: -this.contentSize!.width / 2,
         y: -this.contentSize!.height / 2,
         width: this.contentSize!.width,
@@ -130,9 +129,8 @@ export default class BoxGraphType extends GraphType {
     }
     if (this.config!.label) {
       const text = {
-        is: 'MyText',
-        key: 'text',
-        x: this.textPosition!.x - this.textSize!.width / 2,
+        is: 'text',
+        x: -this.textSize!.width / 2,
         y: this.textPosition!.y - this.textSize!.height / 2,
         text: this.config!.label,
         fontSize: this.config!.fontSize,
