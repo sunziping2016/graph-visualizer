@@ -6,10 +6,18 @@ import Graph from '@/graph/graph/Graph';
 import EdgeType from '@/graph/edge/type/EdgeType';
 import edgeTypeFactory from '@/graph/edge/type/edgeTypeFactory';
 import Port from '@/graph/base/Port';
+import Node from '@/graph/node/Node';
 
 export default class Edge implements Renderable {
   public static getId(data: EdgeData) {
     return data.id || `${data.from}-${data.to}`;
+  }
+  private static findParentNodeOrGraph(node: Positioned | null)
+    : Node | Graph | null {
+    while (node && !(node instanceof Graph || node instanceof Node)) {
+      node = node.parent;
+    }
+    return node;
   }
   public from!: string;
   public to!: string;
@@ -21,6 +29,8 @@ export default class Edge implements Renderable {
   public id!: string;
   public fromPort!: Port;
   public toPort!: Port;
+  public fromNodeOrGraph!: Node | Graph;
+  public toNodeOrGraph!: Node | Graph;
   private edgeType!: EdgeType;
   constructor(root: Root,
               graph: Graph | null,
@@ -47,12 +57,26 @@ export default class Edge implements Renderable {
     const fromPort = this.graph.findPort(this.from.split(':'));
     const toPort = this.graph.findPort(this.to.split(':'));
     if (!fromPort || !toPort) {
-      throw new Error('Unknown start or end node for edge');
+      throw new Error('Unknown start or end port for edge');
     }
     this.fromPort = fromPort;
     this.toPort = toPort;
+    if (this.fromNodeOrGraph) {
+      this.fromNodeOrGraph.fromEdges.delete(this);
+    }
+    if (this.toNodeOrGraph) {
+      this.toNodeOrGraph.toEdges.delete(this);
+    }
+    const fromNodeOrGraph = Edge.findParentNodeOrGraph(fromPort);
+    const toNodeOrGraph = Edge.findParentNodeOrGraph(toPort);
+    if (!fromNodeOrGraph || !toNodeOrGraph) {
+      throw new Error('Unknown start or end node for edge');
+    }
+    fromNodeOrGraph.fromEdges.add(this);
+    toNodeOrGraph.toEdges.add(this);
+    this.fromNodeOrGraph = fromNodeOrGraph;
+    this.toNodeOrGraph = toNodeOrGraph;
     const typeClass = edgeTypeFactory(data);
-    // console.log(this.graph!.findPort(this.from.split(':')));
     if (!this.edgeType || this.edgeType.constructor !== typeClass) {
       this.edgeType = new typeClass(this, data);
     } else {

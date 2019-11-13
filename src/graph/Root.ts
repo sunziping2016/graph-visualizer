@@ -59,6 +59,9 @@ export default class Root extends EventEmitter {
     }
     port.getPosition().x += delta.deltaX;
     port.getPosition().y += delta.deltaY;
+    for (const edge of [...port.fromEdges, ...port.toEdges]) {
+      edge.updatePosition();
+    }
     this.informRender();
   }
   public updateData(data: RenderableData) {

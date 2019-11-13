@@ -25,6 +25,8 @@ export default class Graph extends Port implements Renderable {
   public readonly graph: Graph | null;
   public fullId!: string;
   public depth!: number;
+  public fromEdges!: Set<Edge>;
+  public toEdges!: Set<Edge>;
   public children!: Map<string, Renderable>;
   public ports!: Map<string, Port>;
   public edges!: Map<string, Edge>;
@@ -51,6 +53,8 @@ export default class Graph extends Port implements Renderable {
     const newChildren = new Map();
     this.depth = parentData ? parentData.depth + 1 : 0;
     this.fullId = parentData ? `${parentData.parentId}:${this.id}` : this.id;
+    this.fromEdges = new Set();
+    this.toEdges = new Set();
     const oldChildren = this.children;
     this.children = new Map();
     this.edges = new Map();
@@ -63,14 +67,20 @@ export default class Graph extends Port implements Renderable {
         if (this.children.has(id)) {
           throw new Error('Duplicated id');
         }
-        const newChild = oldChildren && oldChildren.has(id) &&
-          oldChildren.get(id)!.constructor === type ?
-          oldChildren.get(id)! : new type(this.root, this, null, child, {
+        let newChild: Renderable;
+        if (oldChildren && oldChildren.has(id) &&
+            oldChildren.get(id)!.constructor === type) {
+          newChild = oldChildren.get(id)!;
+          newChild.updateData(child, {
             parentId: this.fullId,
             depth: this.depth,
           });
-        // child.depth = this.depth + 1;
-        // child.parentId = this.fullId;
+        } else {
+          newChild = new type(this.root, this, null, child, {
+            parentId: this.fullId,
+            depth: this.depth,
+          });
+        }
         this.children.set(id, newChild);
         if (newChild instanceof Edge) {
           this.edges.set(id, newChild);
