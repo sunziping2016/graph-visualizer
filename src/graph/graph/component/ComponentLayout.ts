@@ -1,6 +1,7 @@
 import Graph from '@/graph/graph/Graph';
 import Positioned from '@/graph/base/Positioned';
-import {ComponentLayoutData, Size} from '@/graph/base/data';
+import {ComponentLayoutData, Size} from '@/graph/base/dataInput';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 export default abstract class ComponentLayout extends Positioned {
   protected readonly graph: Graph;
@@ -8,7 +9,7 @@ export default abstract class ComponentLayout extends Positioned {
     super(parent);
     this.graph = graph;
   }
-  public abstract solve(config: ComponentLayoutData | undefined): void;
-  public abstract render(): object;
+  public abstract updateData(config: ComponentLayoutData | undefined): void;
+  public abstract render(): AnyShape;
   public abstract getContentSize(): Size | undefined;
 }

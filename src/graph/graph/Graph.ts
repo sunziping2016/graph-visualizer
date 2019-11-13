@@ -1,10 +1,10 @@
-import {GraphData} from '@/graph/base/data';
+import {GraphData, RenderableData} from '@/graph/base/dataInput';
 import Root from '@/graph/Root';
 import renderableFactory from '@/graph/base/renderableFactory';
 import Edge from '@/graph/edge/Edge';
-import layoutFactory from '@/graph/graph/layout';
-import componentFactory from '@/graph/graph/component';
-import graphTypeFactory from '@/graph/graph/type';
+import layoutFactory from '@/graph/graph/layout/graphLayoutFactory';
+import componentFactory from '@/graph/graph/component/componentLayoutFactory';
+import graphTypeFactory from '@/graph/graph/type/graphTypeFactory';
 import Port from '@/graph/base/Port';
 import Renderable from '@/graph/base/Renderable';
 import Positioned from '@/graph/base/Positioned';
@@ -12,7 +12,8 @@ import GraphLayout, {LayoutData, LayoutEdgeData} from '@/graph/graph/layout/Grap
 import ComponentLayout from '@/graph/graph/component/ComponentLayout';
 import GraphType from '@/graph/graph/type/GraphType';
 import GraphPhysics from '@/graph/graph/physics/GraphPhysics';
-import physicsFactory from '@/graph/graph/physics';
+import physicsFactory from '@/graph/graph/physics/graphPhysicsFactory';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 export default class Graph extends Port implements Renderable {
   public static getId(data: GraphData) {
@@ -22,24 +23,29 @@ export default class Graph extends Port implements Renderable {
     return data.id;
   }
   public readonly graph: Graph | null;
-  public fullId?: string;
-  public depth?: number;
-  public children?: Map<string, Renderable>;
-  public ports?: Map<string, Port>;
-  public subgraphs?: Map<string, Graph>;
-  public edges?: Map<string, Edge>;
-  public layouts?: GraphLayout[];
-  public physics?: GraphPhysics[];
-  public layoutsData?: LayoutData[];
-  public componentLayout?: ComponentLayout;
-  private graphType?: GraphType;
+  public fullId!: string;
+  public depth!: number;
+  public children!: Map<string, Renderable>;
+  public ports!: Map<string, Port>;
+  public edges!: Map<string, Edge>;
+  public subgraphs!: Map<string, Graph>;
+  public layouts!: GraphLayout[];
+  public physics!: GraphPhysics[];
+  public layoutsData!: LayoutData[];
+  public componentLayout!: ComponentLayout;
+  private graphType!: GraphType;
   constructor(root: Root,
               graph: Graph | null = null,
-              parent: Positioned | null = null) {
+              parent: Positioned | null = null,
+              data: RenderableData) {
+    if (data.type !== 'graph') {
+      throw new Error('Expect node type');
+    }
     super(root, parent);
     this.graph = graph;
+    this.updateData(data);
   }
-  public setData(data: GraphData) {
+  public updateData(data: GraphData) {
     this.id = Graph.getId(data);
     const newChildren = new Map();
     this.depth = data.depth || 0;
@@ -54,10 +60,10 @@ export default class Graph extends Port implements Renderable {
         const newChild = this.children &&
             this.children.has(id) &&
             this.children.get(id)!.constructor === type ?
-            this.children.get(id)! : new type(this.root, this, null);
+            this.children.get(id)! : new type(this.root, this, null, child);
         child.depth = this.depth + 1;
         child.parentId = this.fullId;
-        newChild.setData(child);
+        newChild.updateData(child);
         newChildren.set(id, newChild);
       }
     }
@@ -80,10 +86,10 @@ export default class Graph extends Port implements Renderable {
     const adjacencyList: Map<Port, Port[]> = new Map();
     const edgesData: LayoutEdgeData[] = [];
     for (const edge of this.edges.values()) {
-      const from = this.findPort(edge.from!.split(':'));
-      const to = this.findPort(edge.to!.split(':'));
-      const fromBelonging = this.findBelongingPort(edge.from!);
-      const toBelonging = this.findBelongingPort(edge.to!);
+      const from = this.findPort(edge.from.split(':'));
+      const to = this.findPort(edge.to.split(':'));
+      const fromBelonging = this.findBelongingPort(edge.from);
+      const toBelonging = this.findBelongingPort(edge.to);
       if (from && to && fromBelonging && toBelonging) {
         if (!adjacencyList.has(fromBelonging)) {
           adjacencyList.set(fromBelonging, []);
@@ -103,7 +109,7 @@ export default class Graph extends Port implements Renderable {
     this.layoutsData = [];
     const calculateConnectedComponent = (from: Port) => {
       unvisited.delete(from);
-      const component = this.layoutsData![this.layoutsData!.length - 1];
+      const component = this.layoutsData[this.layoutsData.length - 1];
       component.ports.push(from);
       const adjacency = adjacencyList.get(from);
       if (adjacency) {
@@ -167,12 +173,13 @@ export default class Graph extends Port implements Renderable {
     }
     this.layouts = newLayouts;
     this.physics = newPhysics;
-    this.componentLayout.solve(data.component);
+    this.componentLayout.updateData(data.component);
     const typeClass = graphTypeFactory(data);
     if (!this.graphType || this.graphType.constructor !== typeClass) {
-      this.graphType = new typeClass(this);
+      this.graphType = new typeClass(this, data);
+    } else {
+      this.graphType.updateData(data);
     }
-    this.graphType.setData(data);
   }
   public step(): boolean {
     let updated = false;
@@ -192,22 +199,22 @@ export default class Graph extends Port implements Renderable {
     }
     return updated;
   }
-  public render() {
+  public render(): AnyShape {
     return {
       is: 'group',
       draggable: true,
       id: this.fullId,
       x: this.position.x,
       y: this.position.y,
-      children: this.graphType!.render(),
+      children: this.graphType.render(),
     };
   }
   public findBelongingPort(id: string): Port | null {
     id = id.split(':')[0];
-    if (this.ports!.has(id)) {
-      return this.ports!.get(id)!;
+    if (this.ports.has(id)) {
+      return this.ports.get(id)!;
     }
-    for (const graph of this.subgraphs!.values()) {
+    for (const graph of this.subgraphs.values()) {
       if (graph.findBelongingPort(id)) {
         return graph;
       }
@@ -218,11 +225,11 @@ export default class Graph extends Port implements Renderable {
     if (id.length === 0) {
       return this;
     }
-    if (this.ports!.has(id[0])) {
-      const node = this.ports!.get(id[0])!;
+    if (this.ports.has(id[0])) {
+      const node = this.ports.get(id[0])!;
       return node.findPort(id.slice(1));
     }
-    for (const graph of this.subgraphs!.values()) {
+    for (const graph of this.subgraphs.values()) {
       const node = graph.findPort(id);
       if (node) {
         return node;
@@ -231,15 +238,9 @@ export default class Graph extends Port implements Renderable {
     return null;
   }
   public getBoundingBoxSize() {
-    return this.graphType!.getBoundingBoxSize();
+    return this.graphType.getBoundingBoxSize();
   }
   public distanceToBorder(angle: number) {
-    return this.graphType!.distanceToBorder(angle);
+    return this.graphType.distanceToBorder(angle);
   }
 }
-
-
-
-
-
-

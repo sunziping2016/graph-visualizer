@@ -13,13 +13,14 @@
 
 <script lang="ts">
 import {Vue, Component, Provide, Prop, Watch} from 'vue-property-decorator';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 @Component
 export default class MyCanvas extends Vue {
   @Prop({ type: Number, required: true }) public readonly width!: number;
   @Prop({ type: Number, required: true }) public readonly height!: number;
   @Prop(Boolean) public readonly enableHit: boolean | undefined;
-  @Prop(Object) public readonly data: object | undefined;
+  @Prop(Object) public readonly data: AnyShape | undefined;
   private context: CanvasRenderingContext2D | null = null;
   private hitContext: CanvasRenderingContext2D | null = null;
   private hitColorMap: { [color: string]: string } = {};
@@ -65,9 +66,11 @@ export default class MyCanvas extends Vue {
       this.hitColorMap = {};
       this.hitIdMap = {};
     }
-    const updateShape = (shape: any,
+    const updateShape = (shape: AnyShape,
                          draggable: boolean,
                          draggableId: string) => {
+      const finalDraggable = shape.draggable || draggable;
+      const finalId = shape.id || draggableId;
       switch (shape.is) {
         case 'group': {
           ctx.save();
@@ -103,9 +106,6 @@ export default class MyCanvas extends Vue {
             ctx.strokeStyle = shape.stroke;
             ctx.stroke();
           }
-          const finalDraggable = shape.draggable ||
-            (shape.draggable !== false && draggable);
-          const finalId = shape.id || draggableId;
           if (hitCtx && finalDraggable && finalId) {
             const color = this.generateHitColor(finalId);
             hitCtx.beginPath();
@@ -121,7 +121,7 @@ export default class MyCanvas extends Vue {
           }
           break;
         }
-        case 'text': case 'MyText': {
+        case 'text': {
           const fontSize = shape.fontSize || 12;
           const lineHeight = shape.lineHeight || 1.2;
           const padding = shape.padding || 4;
@@ -168,7 +168,7 @@ export default class MyCanvas extends Vue {
           ctx.stroke();
           break;
         }
-        case 'pointer': case 'MyPointer': {
+        case 'pointer': {
           const x = shape.x || 0;
           const y = shape.y || 0;
           const angle = shape.angle || 0;
@@ -204,7 +204,7 @@ export default class MyCanvas extends Vue {
           break;
         }
         default:
-          throw new Error(`Unknown shape: ${shape.is}`);
+          throw new Error(`Unknown shape`);
       }
     };
     if (this.data) {

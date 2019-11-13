@@ -43,8 +43,7 @@
     {
       "type": "graph",
       "id": "cluster_output",
-      "label": "Outputs123123",
-      "padding": 10,
+      "label": "Outputs",
       "style": "filled",
       "fillColor": "goldenrod",
       "strokeWidth": 1,

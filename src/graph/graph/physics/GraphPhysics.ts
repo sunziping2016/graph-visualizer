@@ -1,5 +1,5 @@
 import Graph from '@/graph/graph/Graph';
-import {GraphPhysicsData} from '@/graph/base/data';
+import {GraphPhysicsData} from '@/graph/base/dataInput';
 import GraphLayout, {LayoutData} from '@/graph/graph/layout/GraphLayout';
 
 export default abstract class GraphPhysics {

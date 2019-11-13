@@ -20,7 +20,7 @@
 
 # json语法指南
 
-详细的语法可以见[data.ts](https://github.com/sunziping2016/graph-visualizer/blob/master/src/graph/base/data.ts)。
+详细的语法可以见[dataInput.ts](https://github.com/sunziping2016/graph-visualizer/blob/master/src/graph/base/data.ts)。
 
 输入json里的东西主要由3种对象组成，节点、边和图。
 

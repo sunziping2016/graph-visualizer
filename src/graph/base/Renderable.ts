@@ -1,6 +1,7 @@
-import {RenderableData} from '@/graph/base/data';
+import {RenderableData} from '@/graph/base/dataInput';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 export default interface Renderable {
-  setData(data: RenderableData): void;
-  render(): object;
+  updateData(data: RenderableData): void;
+  render(): AnyShape;
 }

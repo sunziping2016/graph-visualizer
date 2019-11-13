@@ -1,6 +1,7 @@
 import NodeType from '@/graph/node/type/NodeType';
 import Node from '@/graph/node/Node';
-import {BoxNodeData, Size} from '@/graph/base/data';
+import {BoxNodeData, NodeData, Size} from '@/graph/base/dataInput';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 interface BoxNodeConfig {
   label: string | null;
@@ -28,14 +29,18 @@ export default class BoxNodeType extends NodeType {
     padding: 4,
     align: 'center',
   };
-  private config?: BoxNodeConfig;
-  private textSize?: Size;
-  private contentSize?: Size;
-  private borderSize?: Size;
-  constructor(parent: Node) {
+  private config!: BoxNodeConfig;
+  private textSize!: Size;
+  private contentSize!: Size;
+  private borderSize!: Size;
+  constructor(parent: Node, data: NodeData) {
+    if (data.shape !== 'box') {
+      throw new Error('Expect box shape');
+    }
     super(parent);
+    this.updateData(data);
   }
-  public setData(data: BoxNodeData) {
+  public updateData(data: BoxNodeData) {
     const newConfig = Object.assign({}, BoxNodeType.defaultConfig, data);
     const textSizeNeedsUpdate = !this.config ||
       this.config.label !== newConfig.label ||
@@ -43,9 +48,10 @@ export default class BoxNodeType extends NodeType {
       this.config.fontFamily !== newConfig.fontFamily ||
       this.config.lineHeight !== newConfig.lineHeight;
     const contentSizeNeedsUpdate = textSizeNeedsUpdate ||
-      this.config!.padding !== newConfig.padding;
+      this.config.padding !== newConfig.padding;
     const borderSizeNeedsUpdate = contentSizeNeedsUpdate ||
-      this.config!.strokeWidth !== newConfig.strokeWidth;
+      this.config.strokeWidth !== newConfig.strokeWidth;
+    this.config = newConfig;
     if (textSizeNeedsUpdate) {
       const ctx = this.parent.root.ctx;
       ctx.font = `${newConfig.fontSize}px ${newConfig.fontFamily}`;
@@ -57,56 +63,55 @@ export default class BoxNodeType extends NodeType {
     }
     if (contentSizeNeedsUpdate) {
       this.contentSize = {
-        width: this.textSize!.width + 2 * newConfig.padding,
-        height: this.textSize!.height + 2 * newConfig.padding,
+        width: this.textSize.width + 2 * newConfig.padding,
+        height: this.textSize.height + 2 * newConfig.padding,
       };
     }
     if (borderSizeNeedsUpdate) {
       // Konva's border extends towards both inner and outer
       this.borderSize = {
-        width: this.contentSize!.width + newConfig.strokeWidth,
-        height: this.contentSize!.height + newConfig.strokeWidth,
+        width: this.contentSize.width + newConfig.strokeWidth,
+        height: this.contentSize.height + newConfig.strokeWidth,
       };
     }
-    this.config = newConfig;
   }
-  public render() {
-    const rect = {
+  public render(): AnyShape[] {
+    const rect: AnyShape = {
       is: 'rect',
-      x: -this.contentSize!.width / 2,
-      y: -this.contentSize!.height / 2,
-      width: this.contentSize!.width,
-      height: this.contentSize!.height,
-      fill: this.config!.style === 'filled' ?
-        this.config!.fillColor : undefined,
-      stroke: this.config!.strokeWidth > 0 ?
-        this.config!.strokeColor : undefined,
-      strokeWidth: this.config!.strokeWidth,
+      x: -this.contentSize.width / 2,
+      y: -this.contentSize.height / 2,
+      width: this.contentSize.width,
+      height: this.contentSize.height,
+      fill: this.config.style === 'filled' ?
+        this.config.fillColor : undefined,
+      stroke: this.config.strokeWidth > 0 ?
+        this.config.strokeColor : undefined,
+      strokeWidth: this.config.strokeWidth,
     };
-    const rendered: object[] = [rect];
-    if (this.config!.label) {
-      const text = {
+    const rendered: AnyShape[] = [rect];
+    if (this.config.label) {
+      const text: AnyShape = {
         is: 'text',
-        x: -this.contentSize!.width / 2,
-        y: -this.contentSize!.height / 2,
-        text: this.config!.label,
-        fontSize: this.config!.fontSize,
-        fontFamily: this.config!.fontFamily,
-        lineHeight: this.config!.lineHeight,
-        padding: this.config!.padding,
-        align: this.config!.align,
+        x: -this.contentSize.width / 2,
+        y: -this.contentSize.height / 2,
+        text: this.config.label,
+        fontSize: this.config.fontSize,
+        fontFamily: this.config.fontFamily,
+        lineHeight: this.config.lineHeight,
+        padding: this.config.padding,
+        align: this.config.align,
       };
       rendered.push(text);
     }
     return rendered;
   }
   public getBoundingBoxSize() {
-    return this.borderSize!;
+    return this.borderSize;
   }
   public distanceToBorder(angle: number) {
     return Math.min(
-      Math.abs(this.borderSize!.width / 2 / Math.cos(angle)),
-      Math.abs(this.borderSize!.height / 2 / Math.sin(angle)),
+      Math.abs(this.borderSize.width / 2 / Math.cos(angle)),
+      Math.abs(this.borderSize.height / 2 / Math.sin(angle)),
     );
   }
 }

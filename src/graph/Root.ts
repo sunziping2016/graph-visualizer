@@ -1,10 +1,10 @@
 import EventEmitter from '@/graph/base/EventEmitter';
-import { RenderableData } from '@/graph/base/data';
+import { RenderableData } from '@/graph/base/dataInput';
 import renderableFactory from '@/graph/base/renderableFactory';
 
 export default class Root extends EventEmitter {
   public ctx: CanvasRenderingContext2D;
-  public child: Renderable | null;
+  public child: (Renderable & Port) | null;
   public stepTimer: number;
   public constructor() {
     super();
@@ -13,30 +13,39 @@ export default class Root extends EventEmitter {
     this.stepTimer = setInterval(() => {
       if (this.child instanceof Graph) {
         if (this.child.step()) {
-          this.refresh();
+          this.informRender();
         }
       }
     }, 1000 / 60);
   }
   public findPort(id: string[]) {
-    // noinspection SuspiciousTypeOfGuard
-    if (this.child instanceof Port) {
+    if (this.child) {
       return this.child.findPort(id);
     }
     return null;
   }
-  public setData(data: RenderableData) {
+  public updateData(data: RenderableData) {
     const newClass = renderableFactory(data);
-    if (this.child === null || this.child.constructor !== newClass) {
-      this.child = new newClass(this, null, null);
+    if (!this.child || this.child.constructor !== newClass) {
+      const renderable = new newClass(this, null, null, data);
+      // noinspection SuspiciousTypeOfGuard
+      if (!(renderable instanceof Port)) {
+        throw new Error('Root element must be renderable');
+      }
+      this.child = renderable;
+    } else {
+      this.child.updateData(data);
     }
-    this.child!.setData(data);
-    this.refresh();
+    this.informRender();
   }
-  public redraw(data: RenderableData) {
-    this.child = new (renderableFactory(data))(this, null, null);
-    this.child.setData(data);
-    this.refresh();
+  public fullyUpdateData(data: RenderableData) {
+    const renderable = new (renderableFactory(data))(this, null, null, data);
+    // noinspection SuspiciousTypeOfGuard
+    if (!(renderable instanceof Port)) {
+      throw new Error('Root element must be renderable');
+    }
+    this.child = renderable;
+    this.informRender();
   }
   public moveDraggable(fullId: string,
                        delta: { deltaX: number, deltaY: number }) {
@@ -50,12 +59,14 @@ export default class Root extends EventEmitter {
       if (element !== null) {
         element.getPosition().x += delta.deltaX;
         element.getPosition().y += delta.deltaY;
-        this.refresh();
+        this.informRender();
       }
     }
   }
-  public refresh() {
-    this.emit('render', [this.child!.render()]);
+  public informRender() {
+    if (this.child) {
+      this.emit('render', [this.child.render()]);
+    }
   }
 }
 
@@ -72,7 +83,7 @@ export const globalParsers
 import stdThreadJoinGv from '!raw-loader!./examples/stdThreadJoin.gv';
 import stdThreadJoinJson from '!raw-loader!./examples/stdThreadJoin.txt';
 import recordJson from '!raw-loader!./examples/record.txt';
-import subGraphJson from '!raw-loader!./examples/subgraph.txt';
+import subgraphJson from '!raw-loader!./examples/subgraph.txt';
 import icosahedronJson from '!raw-loader!./examples/icosahedron.txt';
 import tableJson from '!raw-loader!./examples/table.txt';
 import edgeJson from '!raw-loader!./examples/edge.txt';
@@ -103,9 +114,9 @@ export const globalExamples: Example[] = [
     content: recordJson,
   },
   {
-    name: 'subGraph',
+    name: 'subgraph',
     parser: 'json',
-    content: subGraphJson,
+    content: subgraphJson,
   },
   {
     name: 'icosahedronJson',

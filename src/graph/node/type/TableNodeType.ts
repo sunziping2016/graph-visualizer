@@ -2,8 +2,9 @@ import convert, {Element} from 'xml-js';
 import NodeType from './NodeType';
 import TableCell from './TableCell';
 import Node from '@/graph/node/Node';
-import {Size, TableNodeData} from '@/graph/base/data';
+import {NodeData, Size, TableNodeData} from '@/graph/base/dataInput';
 import Port from '@/graph/base/Port';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 interface TableNodeConfig {
   label: string;
@@ -26,16 +27,20 @@ export default class TableNodeType extends NodeType {
     fontFamily: 'sans-serif',
     lineHeight: 1.2,
   };
-  private config?: TableNodeConfig;
-  private tableConfig?: TableConfig;
-  private table?: TableCell[][];
-  private ports?: Map<string, Port>;
-  private contentSize?: Size;
-  private borderSize?: Size;
-  constructor(parent: Node) {
+  private config!: TableNodeConfig;
+  private tableConfig!: TableConfig;
+  private table!: TableCell[][];
+  private ports!: Map<string, Port>;
+  private contentSize!: Size;
+  private borderSize!: Size;
+  constructor(parent: Node, data: NodeData) {
+    if (data.shape !== 'table') {
+      throw new Error('Expect record shape');
+    }
     super(parent);
+    this.updateData(data);
   }
-  public setData(data: TableNodeData) {
+  public updateData(data: TableNodeData) {
     const newConfig = Object.assign({}, TableNodeType.defaultConfig, data);
     const layoutNeedsUpdate = !this.config ||
       this.config.label !== newConfig.label ||
@@ -95,8 +100,8 @@ export default class TableNodeType extends NodeType {
               if (!td.name || td.name.toLowerCase() !== 'td') {
                 throw new Error('Expect td element');
               }
-              const cell = new TableCell(this.parent.root, this.parent, this);
-              cell.setData(td);
+              const cell = new TableCell(this.parent.root, this.parent,
+                this, td);
               const port = cell.getPort();
               if (port) {
                 this.ports.set(port, cell);
@@ -129,9 +134,9 @@ export default class TableNodeType extends NodeType {
           cell.rowOffset = rowOffset;
           cell.columnOffset = columnOffset;
           const {rowSpan, columnSpan} = cell.getConfig()!;
-          const cellHeight = (cell.contentSize!.height -
+          const cellHeight = (cell.contentSize.height -
             (rowSpan - 1) * this.tableConfig.cellSpacing) / rowSpan;
-          const cellWidth = (cell.contentSize!.width -
+          const cellWidth = (cell.contentSize.width -
             (columnSpan - 1) * this.tableConfig.cellSpacing) / columnSpan;
           for (let i = 0; i < rowSpan; ++i) {
             for (let j = 0; j < columnSpan; ++j) {
@@ -187,11 +192,11 @@ export default class TableNodeType extends NodeType {
         for (const cell of row) {
           const {rowSpan, columnSpan} = cell.getConfig()!;
           const {rowOffset, columnOffset} = cell;
-          const upperLeftX = accColumnWidth[columnOffset!];
-          const upperLeftY = accRowHeight[rowOffset!];
-          const width = accColumnWidth[columnOffset! + columnSpan] -
+          const upperLeftX = accColumnWidth[columnOffset];
+          const upperLeftY = accRowHeight[rowOffset];
+          const width = accColumnWidth[columnOffset + columnSpan] -
             upperLeftX - this.tableConfig.cellSpacing;
-          const height = accRowHeight[rowOffset! + rowSpan] -
+          const height = accRowHeight[rowOffset + rowSpan] -
             upperLeftY - this.tableConfig.cellSpacing;
           cell.setPosition({
             x: upperLeftX + width / 2 - this.contentSize.width / 2,
@@ -208,19 +213,19 @@ export default class TableNodeType extends NodeType {
       };
     }
   }
-  public render() {
-    const rendered = [];
-    rendered.push( {
+  public render(): AnyShape[] {
+    const rendered: AnyShape[] = [];
+    rendered.push({
       is: 'rect',
-      x: -this.contentSize!.width / 2 - this.tableConfig!.cellSpacing,
-      y: -this.contentSize!.height / 2 - this.tableConfig!.cellSpacing,
-      width: this.contentSize!.width + 2 * this.tableConfig!.cellSpacing,
-      height: this.contentSize!.height + 2 * this.tableConfig!.cellSpacing,
+      x: -this.contentSize.width / 2 - this.tableConfig.cellSpacing,
+      y: -this.contentSize.height / 2 - this.tableConfig.cellSpacing,
+      width: this.contentSize.width + 2 * this.tableConfig.cellSpacing,
+      height: this.contentSize.height + 2 * this.tableConfig.cellSpacing,
       fill: 'white',
-      stroke: this.tableConfig!.border > 0 ? 'black' : undefined,
-      strokeWidth: this.tableConfig!.border,
+      stroke: this.tableConfig.border > 0 ? 'black' : undefined,
+      strokeWidth: this.tableConfig.border,
     });
-    for (const row of this.table!) {
+    for (const row of this.table) {
       for (const cell of row) {
         rendered.push(cell.render());
       }
@@ -235,7 +240,7 @@ export default class TableNodeType extends NodeType {
   }
   public findPort(id: string[]): Port | null {
     if (id.length === 1) {
-      const founded = this.ports!.get(id[0]);
+      const founded = this.ports.get(id[0]);
       if (founded) {
         return founded;
       }
@@ -244,12 +249,12 @@ export default class TableNodeType extends NodeType {
     return null;
   }
   public getBoundingBoxSize() {
-    return this.borderSize!;
+    return this.borderSize;
   }
   public distanceToBorder(angle: number) {
     return Math.min(
-      Math.abs(this.borderSize!.width / 2 / Math.cos(angle)),
-      Math.abs(this.borderSize!.height / 2 / Math.sin(angle)),
+      Math.abs(this.borderSize.width / 2 / Math.cos(angle)),
+      Math.abs(this.borderSize.height / 2 / Math.sin(angle)),
     );
   }
 }

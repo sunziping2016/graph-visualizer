@@ -2,8 +2,9 @@ import NodeType from './NodeType';
 import Node from '@/graph/node/Node';
 import recordParser from './recordParser';
 import RecordCell from './RecordCell';
-import {RecordNodeData, Size} from '@/graph/base/data';
+import {NodeData, RecordNodeData, Size} from '@/graph/base/dataInput';
 import Port from '@/graph/base/Port';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 interface RecordNodeConfig {
   label: string;
@@ -33,12 +34,16 @@ export default class RecordNodeType extends NodeType {
     padding: 4,
     align: 'center',
   };
-  private config?: RecordNodeConfig;
-  private ports?: Map<string, Port>;
-  private root?: RecordCell;
-  private borderSize?: Size;
-  constructor(parent: Node) {
+  private config!: RecordNodeConfig;
+  private ports!: Map<string, Port>;
+  private root!: RecordCell;
+  private borderSize!: Size;
+  constructor(parent: Node, data: NodeData) {
+    if (data.shape !== 'record') {
+      throw new Error('Expect record shape');
+    }
     super(parent);
+    this.updateData(data);
   }
   public getConfig(): RecordNodeConfig | undefined {
     return this.config;
@@ -46,7 +51,7 @@ export default class RecordNodeType extends NodeType {
   public getPorts(): Map<string, Port> | undefined {
     return this.ports;
   }
-  public setData(data: RecordNodeData) {
+  public updateData(data: RecordNodeData) {
     const newConfig = Object.assign({}, RecordNodeType.defaultConfig, data);
     const contentNeedsUpdate = !this.config ||
       this.config.label !== newConfig.label ||
@@ -56,30 +61,30 @@ export default class RecordNodeType extends NodeType {
       this.config.lineHeight !== newConfig.lineHeight ||
       this.config.padding !== newConfig.padding;
     const borderNeedsUpdate = contentNeedsUpdate ||
-      this.config!.strokeWidth !== newConfig.strokeWidth;
+      this.config.strokeWidth !== newConfig.strokeWidth;
     this.config = newConfig;
     if (contentNeedsUpdate) {
       const record = recordParser(data.label);
-      this.root = new RecordCell(this.parent.root, this.parent, this);
       this.ports = new Map();
-      this.root.setData(record, this.config.direction === 'horizontal');
+      this.root = new RecordCell(this.parent.root, this.parent, this,
+        record, this.config.direction === 'horizontal');
       const rootCellSize = this.root.getCellSize()!;
-      this.root.setCellSize(rootCellSize.width, rootCellSize.height);
+      this.root.updateCellSize(rootCellSize.width, rootCellSize.height);
     }
     if (borderNeedsUpdate) {
-      const rootCellSize = this.root!.getCellSize()!;
+      const rootCellSize = this.root.getCellSize()!;
       this.borderSize = {
         width: rootCellSize.width + this.config.strokeWidth,
         height: rootCellSize.height + this.config.strokeWidth,
       };
     }
   }
-  public render() {
-    return this.root!.render();
+  public render(): AnyShape[] {
+    return this.root.render();
   }
   public findPort(id: string[]): Port | null {
     if (id.length === 1) {
-      const founded = this.ports!.get(id[0]);
+      const founded = this.ports.get(id[0]);
       if (founded) {
         return founded;
       }
@@ -88,12 +93,12 @@ export default class RecordNodeType extends NodeType {
     return null;
   }
   public getBoundingBoxSize() {
-    return this.borderSize!;
+    return this.borderSize;
   }
   public distanceToBorder(angle: number) {
     return Math.min(
-      Math.abs(this.borderSize!.width / 2 / Math.cos(angle)),
-      Math.abs(this.borderSize!.height / 2 / Math.sin(angle)),
+      Math.abs(this.borderSize.width / 2 / Math.cos(angle)),
+      Math.abs(this.borderSize.height / 2 / Math.sin(angle)),
     );
   }
 }

@@ -1,8 +1,9 @@
 import Graph from '@/graph/graph/Graph';
 import GraphLayout, {LayoutData} from '@/graph/graph/layout/GraphLayout';
-import {KamadaKawaiGraphLayoutData, Size} from '@/graph/base/data';
+import {KamadaKawaiGraphLayoutData, Size} from '@/graph/base/dataInput';
 import Port from '@/graph/base/Port';
 import Positioned from '@/graph/base/Positioned';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 interface KamadaKawaiGraphLayoutConfig {
   springLength: number;
@@ -14,19 +15,17 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
     springLength: 150,
     springConstant: 0.05,
   };
-  private data?: LayoutData;
-  private index?: number;
-  private contentSize?: Size;
+  private contentSize: Size;
   constructor(graph: Graph, parent: Positioned | null) {
     super(graph, parent);
+    this.contentSize = { width: 0, height: 0 };
   }
   public solve(config: KamadaKawaiGraphLayoutData | undefined,
                data: LayoutData,
                index: number) {
+    super.solve(config, data, index);
     const newConfig: KamadaKawaiGraphLayoutConfig = Object.assign({},
       KamadaKawaiGraphLayout.defaultConfig, config);
-    this.data = data;
-    this.index = index;
     const portToIndex: Map<Port, number> = new Map();
     for (let i = 0; i < data.ports.length; ++i) {
       portToIndex.set(data.ports[i], i);
@@ -235,13 +234,14 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
       port.getPosition().x -= position.x;
       port.getPosition().y -= position.y;
     }
+    this.informAllEdgesFullyUpdatePosition();
   } // solve method
-  public render() {
+  public render(): AnyShape {
     return {
       is: 'group',
       x: this.position.x,
       y: this.position.y,
-      children: this.data!.children.map((x) => x.render()),
+      children: this.data.children.map((x) => x.render()),
     };
   }
   public getContentSize() {

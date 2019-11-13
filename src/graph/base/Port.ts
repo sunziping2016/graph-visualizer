@@ -1,5 +1,5 @@
 import Positioned from '@/graph/base/Positioned';
-import {Size} from '@/graph/base/data';
+import {Size} from '@/graph/base/dataInput';
 import Root from '@/graph/Root';
 
 export default abstract class Port extends Positioned {

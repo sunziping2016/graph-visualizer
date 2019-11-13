@@ -162,7 +162,7 @@ export default class App extends Vue {
       if (this.rawInput) {
         const parsed = globalParsers[this.parser](this.rawInput);
         this.parsedInput = JSON.stringify(parsed, null, 2);
-        globalRoot.setData(parsed);
+        globalRoot.updateData(parsed);
       } else {
         this.parsedInput = '';
       }
@@ -198,7 +198,7 @@ export default class App extends Vue {
     this.parseInput();
   }
   public redraw() {
-    globalRoot.redraw(JSON.parse(this.parsedInput));
+    globalRoot.fullyUpdateData(JSON.parse(this.parsedInput));
   }
   public selectExample(i: number) {
     const example = globalExamples[i];

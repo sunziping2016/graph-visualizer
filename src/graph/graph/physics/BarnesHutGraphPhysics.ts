@@ -1,5 +1,5 @@
 import GraphPhysics from '@/graph/graph/physics/GraphPhysics';
-import {BarnesHutGraphPhysicsData} from '@/graph/base/data';
+import {BarnesHutGraphPhysicsData} from '@/graph/base/dataInput';
 import {LayoutData} from '@/graph/graph/layout/GraphLayout';
 
 interface BarnesHutGraphPhysicsConfig {

@@ -1,8 +1,9 @@
 import TableNodeType from '@/graph/node/type/TableNodeType';
 import Root from '@/graph/Root';
 import {Element} from 'xml-js';
-import {Size} from '@/graph/base/data';
+import {Size} from '@/graph/base/dataInput';
 import Port from '@/graph/base/Port';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 interface TableCellConfig {
   rowSpan: number;
@@ -12,20 +13,21 @@ interface TableCellConfig {
 }
 
 export default class TableCell extends Port {
-  public rowOffset?: number;
-  public columnOffset?: number;
-  public contentSize?: Size;
-  public cellSize?: Size;
+  public rowOffset!: number;
+  public columnOffset!: number;
+  public contentSize!: Size;
+  public cellSize!: Size;
   private readonly nodeType: TableNodeType;
-  private config?: TableCellConfig;
+  private config!: TableCellConfig;
   private port?: string;
-  private label?: string;
-  private textSize?: Size;
-  constructor(root: Root, parent: Port, nodeType: TableNodeType) {
+  private label!: string;
+  private textSize!: Size;
+  constructor(root: Root, parent: Port, nodeType: TableNodeType, data: any) {
      super(root, parent);
      this.nodeType = nodeType;
+     this.updateData(data);
   }
-  public setData(data: any) {
+  public updateData(data: any) {
     this.config = {
       rowSpan: 1,
       columnSpan: 1,
@@ -97,8 +99,8 @@ export default class TableCell extends Port {
     this.rowOffset = 0;
     this.columnOffset = 0;
   }
-  public render() {
-    const rect = {
+  public render(): AnyShape {
+    const rect: AnyShape = {
       is: 'rect',
       x: -this.cellSize!.width / 2,
       y: -this.cellSize!.height / 2,
@@ -108,10 +110,10 @@ export default class TableCell extends Port {
       stroke: this.config!.border > 0 ? 'black' : undefined,
       strokeWidth: this.config!.border,
     };
-    const rendered: object[] = [rect];
+    const rendered: AnyShape[] = [rect];
     if (this.label) {
       const parentConfig = this.nodeType.getConfig()!;
-      const text = {
+      const text: AnyShape = {
         is: 'text',
         x: -this.contentSize!.width / 2,
         y: -this.contentSize!.height / 2,

@@ -1,4 +1,4 @@
-import {Position} from '@/graph/base/data';
+import {Position} from '@/graph/base/dataInput';
 
 export default class Positioned {
   public parent: Positioned | null;

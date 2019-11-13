@@ -1,7 +1,8 @@
 import ComponentLayout from '@/graph/graph/component/ComponentLayout';
 import Graph from '@/graph/graph/Graph';
-import {LinearComponentLayoutData, Size} from '@/graph/base/data';
+import {LinearComponentLayoutData, Size} from '@/graph/base/dataInput';
 import Positioned from '@/graph/base/Positioned';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 interface LinearComponentLayoutConfig {
   direction: 'TD' | 'DT' | 'LR' | 'RL';
@@ -13,14 +14,15 @@ export default class LinearComponentLayout extends ComponentLayout {
     direction: 'TD',
     spaceBetween: 12,
   };
-  private contentSize?: Size;
+  private contentSize: Size;
   constructor(graph: Graph, parent: Positioned | null) {
     super(graph, parent);
+    this.contentSize = { width: 0, height: 0 };
   }
-  public solve(config: LinearComponentLayoutData | undefined) {
+  public updateData(config: LinearComponentLayoutData | undefined) {
     const newConfig: LinearComponentLayoutConfig = Object.assign({},
       LinearComponentLayout.defaultConfig, config);
-    const components = this.graph.layouts!;
+    const components = this.graph.layouts;
     const componentsSize = components.map((x) => x.getContentSize()!);
     if (newConfig.direction === 'LR' || newConfig.direction === 'RL') {
       this.contentSize = {
@@ -62,12 +64,12 @@ export default class LinearComponentLayout extends ComponentLayout {
       }
     } // position calculation
   }
-  public render() {
+  public render(): AnyShape {
     return {
       is: 'group',
       x: this.position.x,
       y: this.position.y,
-      children: this.graph.layouts!.map((x) => x.render()),
+      children: this.graph.layouts.map((x) => x.render()),
     };
   }
   public getContentSize() {

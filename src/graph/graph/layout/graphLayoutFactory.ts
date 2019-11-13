@@ -1,5 +1,5 @@
 import KamadaKawaiGraphLayout from './KamadaKawaiGraphLayout';
-import {GraphLayoutData} from '@/graph/base/data';
+import {GraphLayoutData} from '@/graph/base/dataInput';
 import GraphLayout from '@/graph/graph/layout/GraphLayout';
 import Graph from '@/graph/graph/Graph';
 import Positioned from '@/graph/base/Positioned';

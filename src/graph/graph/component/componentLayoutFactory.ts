@@ -1,4 +1,4 @@
-import {ComponentLayoutData} from '@/graph/base/data';
+import {ComponentLayoutData} from '@/graph/base/dataInput';
 import Graph from '@/graph/graph/Graph';
 import ComponentLayout from '@/graph/graph/component/ComponentLayout';
 import LinearComponentLayout from '@/graph/graph/component/LinearComponentLayout';

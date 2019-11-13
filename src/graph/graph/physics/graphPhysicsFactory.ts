@@ -1,4 +1,4 @@
-import {GraphPhysicsData} from '@/graph/base/data';
+import {GraphPhysicsData} from '@/graph/base/dataInput';
 import Graph from '@/graph/graph/Graph';
 import GraphPhysics from '@/graph/graph/physics/GraphPhysics';
 import BarnesHutGraphPhysics from '@/graph/graph/physics/BarnesHutGraphPhysics';
