@@ -49,14 +49,11 @@ export default class StraightEdgeType extends EdgeType {
     this.updatePosition();
   }
   public updatePosition(): void {
-    if (!this.parent.graph || !this.parent.parent) {
+    if (!this.parent.parent) {
       throw new Error('Top level edge cannot be rendered');
     }
-    const fromPort = this.parent.graph.findPort(this.parent.from.split(':'));
-    const toPort = this.parent.graph.findPort(this.parent.to.split(':'));
-    if (!fromPort || !toPort) {
-      throw new Error('Unknown start or end node for edge');
-    }
+    const fromPort = this.parent.fromPort;
+    const toPort = this.parent.toPort;
     const fromPos = fromPort.getAbsolutePosition(this.parent.parent);
     const toPos = toPort.getAbsolutePosition(this.parent.parent);
     this.fromAngle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);

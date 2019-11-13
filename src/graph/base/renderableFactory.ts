@@ -3,14 +3,15 @@ import Edge from '@/graph/edge/Edge';
 import Graph from '@/graph/graph/Graph';
 import Node from '@/graph/node/Node';
 import {RenderableData} from '@/graph/base/dataInput';
-import Renderable from '@/graph/base/Renderable';
+import Renderable, {ParentData} from '@/graph/base/Renderable';
 import Positioned from '@/graph/base/Positioned';
 
 interface RenderableConstructor {
   new (root: Root,
        graph: Graph | null,
        parent: Positioned | null,
-       data: RenderableData): Renderable;
+       data: RenderableData,
+       parentData: ParentData | null): Renderable;
   getId(data: RenderableData): string;
 }
 

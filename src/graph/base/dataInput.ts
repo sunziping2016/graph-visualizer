@@ -1,8 +1,6 @@
 export interface CommonNodeData {
   type: 'node';
   id: string;
-  depth?: number;                       // for internal use
-  parentId?: string;                    // for internal use
 }
 
 export interface BoxNodeData extends CommonNodeData {
@@ -93,8 +91,6 @@ export interface CommonEdgeData {
   id?: string;
   from: string;                         // starting node for edge
   to: string;                           // ending node for edge
-  depth?: number;                       // for internal use
-  parentId?: string;                    // for internal use
 }
 
 export interface CommonLineEdgeData extends CommonEdgeData {
@@ -169,8 +165,6 @@ export interface BoxGraphData extends CommonGraphData {
   align?: 'left' | 'center' | 'right';  // default 'center'
   spaceBetween?: number;                // default 12, space between title and
                                         // content
-  depth?: number;                       // for internal use, please leave empty
-  parentId?: string;                    // for internal use
 }
 
 export type GraphData = BoxGraphData;

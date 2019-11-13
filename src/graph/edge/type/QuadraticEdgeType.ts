@@ -49,14 +49,11 @@ export default class QuadraticEdgeType extends EdgeType {
     this.config = Object.assign({}, QuadraticEdgeType.defaultConfig, data);
   }
   public fullyUpdatePosition(): void {
-    if (!this.parent.graph || !this.parent.parent) {
+    if (!this.parent.parent) {
       throw new Error('Top level edge cannot be rendered');
     }
-    const fromPort = this.parent.graph.findPort(this.parent.from.split(':'));
-    const toPort = this.parent.graph.findPort(this.parent.to.split(':'));
-    if (!fromPort || !toPort) {
-      throw new Error('Unknown start or end node for edge');
-    }
+    const fromPort = this.parent.fromPort;
+    const toPort = this.parent.toPort;
     const fromPos = fromPort.getAbsolutePosition(this.parent.parent);
     const toPos = toPort.getAbsolutePosition(this.parent.parent);
     this.controlPoint.setPosition({
@@ -66,19 +63,16 @@ export default class QuadraticEdgeType extends EdgeType {
     this.updatePosition();
   }
   public updatePosition(): void {
-    if (!this.parent.graph || !this.parent.parent) {
+    if (!this.parent.parent) {
       throw new Error('Top level edge cannot be rendered');
     }
-    const fromPort = this.parent.graph.findPort(this.parent.from.split(':'));
-    const toPort = this.parent.graph.findPort(this.parent.to.split(':'));
-    if (!fromPort || !toPort) {
-      throw new Error('Unknown start or end node for edge');
-    }
+    const fromPort = this.parent.fromPort;
+    const toPort = this.parent.toPort;
     const fromPos = fromPort.getAbsolutePosition(this.parent.parent);
     const toPos = toPort.getAbsolutePosition(this.parent.parent);
     const viaPos = this.controlPoint.getPosition();
-    this.fromAngle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);
-    this.toAngle = Math.PI + this.fromAngle;
+    this.fromAngle = Math.atan2(viaPos.y - fromPos.y, viaPos.x - fromPos.x);
+    this.toAngle = Math.PI + Math.atan2(toPos.y - viaPos.y, toPos.x - viaPos.x);
     const fromDistance = fromPort.distanceToBorder(this.fromAngle);
     const toDistance = toPort.distanceToBorder(this.toAngle);
     let realFromPosX = fromPos.x + fromDistance * Math.cos(this.fromAngle);

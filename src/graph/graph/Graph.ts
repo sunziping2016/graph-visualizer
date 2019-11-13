@@ -6,7 +6,7 @@ import layoutFactory from '@/graph/graph/layout/graphLayoutFactory';
 import componentFactory from '@/graph/graph/component/componentLayoutFactory';
 import graphTypeFactory from '@/graph/graph/type/graphTypeFactory';
 import Port from '@/graph/base/Port';
-import Renderable from '@/graph/base/Renderable';
+import Renderable, {ParentData} from '@/graph/base/Renderable';
 import Positioned from '@/graph/base/Positioned';
 import GraphLayout, {LayoutData, LayoutEdgeData} from '@/graph/graph/layout/GraphLayout';
 import ComponentLayout from '@/graph/graph/component/ComponentLayout';
@@ -35,50 +35,50 @@ export default class Graph extends Port implements Renderable {
   public componentLayout!: ComponentLayout;
   private graphType!: GraphType;
   constructor(root: Root,
-              graph: Graph | null = null,
-              parent: Positioned | null = null,
-              data: RenderableData) {
+              graph: Graph | null,
+              parent: Positioned | null,
+              data: RenderableData,
+              parentData: ParentData | null) {
     if (data.type !== 'graph') {
       throw new Error('Expect node type');
     }
     super(root, parent);
     this.graph = graph;
-    this.updateData(data);
+    this.updateData(data, parentData);
   }
-  public updateData(data: GraphData) {
+  public updateData(data: GraphData, parentData: ParentData | null) {
     this.id = Graph.getId(data);
     const newChildren = new Map();
-    this.depth = data.depth || 0;
-    this.fullId = data.parentId ? `${data.parentId}:${this.id}` : this.id;
+    this.depth = parentData ? parentData.depth + 1 : 0;
+    this.fullId = parentData ? `${parentData.parentId}:${this.id}` : this.id;
+    const oldChildren = this.children;
+    this.children = new Map();
+    this.edges = new Map();
+    this.ports = new Map();
+    this.subgraphs = new Map();
     if (data.children) {
       for (const child of data.children) {
         const type = renderableFactory(child);
         const id = type.getId(child);
-        if (newChildren.has(id)) {
+        if (this.children.has(id)) {
           throw new Error('Duplicated id');
         }
-        const newChild = this.children &&
-            this.children.has(id) &&
-            this.children.get(id)!.constructor === type ?
-            this.children.get(id)! : new type(this.root, this, null, child);
-        child.depth = this.depth + 1;
-        child.parentId = this.fullId;
-        newChild.updateData(child);
-        newChildren.set(id, newChild);
-      }
-    }
-    // Create maps and arrays
-    this.children = newChildren;
-    this.edges = new Map();
-    this.ports = new Map();
-    this.subgraphs = new Map();
-    for (const [name, renderable] of this.children.entries()) {
-      if (renderable instanceof Edge) {
-        this.edges.set(name, renderable);
-      } else {
-        this.ports.set(name, renderable as any);
-        if (renderable instanceof Graph) {
-          this.subgraphs.set(name, renderable as any);
+        const newChild = oldChildren && oldChildren.has(id) &&
+          oldChildren.get(id)!.constructor === type ?
+          oldChildren.get(id)! : new type(this.root, this, null, child, {
+            parentId: this.fullId,
+            depth: this.depth,
+          });
+        // child.depth = this.depth + 1;
+        // child.parentId = this.fullId;
+        this.children.set(id, newChild);
+        if (newChild instanceof Edge) {
+          this.edges.set(id, newChild);
+        } else {
+          this.ports.set(id, newChild as any);
+          if (newChild instanceof Graph) {
+            this.subgraphs.set(id, newChild);
+          }
         }
       }
     }

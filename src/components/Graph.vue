@@ -190,11 +190,13 @@ export default class Graph extends Vue {
     const id = (this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y);
     if (id) {
       this.draggedId = id;
+      globalRoot.setFixed([id]);
     }
   }
   public mouseup() {
     this.mouseDragActive = false;
     this.draggedId = null;
+    globalRoot.clearFixed();
   }
   public mousemove(e: MouseEvent) {
     if (e.buttons === 0) {
@@ -208,7 +210,7 @@ export default class Graph extends Vue {
       const deltaX = newCoords.x - this.mouseLastCoords.x;
       const deltaY = newCoords.y - this.mouseLastCoords.y;
       if (this.draggedId) {
-          globalRoot.moveDraggable(this.draggedId, {
+          globalRoot.movePort(this.draggedId, {
               deltaX: deltaX / this.scale,
               deltaY: deltaY / this.scale,
           });
