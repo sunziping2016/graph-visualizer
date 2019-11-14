@@ -129,6 +129,7 @@ export interface BarnesHutGraphPhysicsData {
   springLength?: number;                 // default 150
   springConstant?: number;               // default 0.04
   damping?: number;                      // default 0.09
+  maxVelocity?: number;                  // default 50
 }
 
 export type GraphPhysicsData = BarnesHutGraphPhysicsData;

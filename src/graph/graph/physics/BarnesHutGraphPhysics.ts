@@ -11,6 +11,7 @@ interface BarnesHutGraphPhysicsConfig {
   springLength: number;
   springConstant: number;
   damping: number;
+  maxVelocity: number;
 }
 
 interface BarnesHutTree {
@@ -40,6 +41,7 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
     springLength: 150,
     springConstant: 0.04,
     damping: 0.09,
+    maxVelocity: 50,
   };
   private static splitBranch(branch: BarnesHutTree) {
     if (branch.children) {
@@ -124,8 +126,8 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       // ignore overlapping node
       if (child.data.getPosition().x === pos.x &&
           child.data.getPosition().y === pos.y ) {
-        pos.x += Math.random();
-        pos.y += Math.random();
+        pos.x += Math.random() - 0.5;
+        pos.y += Math.random() - 0.5;
       } else {
         this.splitBranch(child);
         this.placeInTree(child, node);
@@ -139,10 +141,10 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
                                   node: Positioned) {
     const nodeMass = 1;
     const totalMass = branch.mass + nodeMass;
-    branch.centerOfMass.x = branch.centerOfMass.x * branch.mass +
-      node.getPosition().x * nodeMass;
-    branch.centerOfMass.y = branch.centerOfMass.y * branch.mass +
-      node.getPosition().y * nodeMass;
+    branch.centerOfMass.x = (branch.centerOfMass.x * branch.mass +
+      node.getPosition().x * nodeMass) / totalMass;
+    branch.centerOfMass.y = (branch.centerOfMass.y * branch.mass +
+      node.getPosition().y * nodeMass) / totalMass;
     branch.mass = totalMass;
   }
   private config: BarnesHutGraphPhysicsConfig;
@@ -248,9 +250,9 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       force.x = 0;
       force.y = 0;
     }
+    const that = this;
     // Calculate node repulsive force
     if (this.nodes.length) {
-      const that = this;
       function calculateForces(dx: number, dy: number,
                                node: Positioned,
                                branch: BarnesHutTree) {
@@ -280,25 +282,37 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
           return;
         }
         const dx = branch.centerOfMass.x - node.getPosition().x;
-        const dy = branch.centerOfMass.y = node.getPosition().y;
+        const dy = branch.centerOfMass.y - node.getPosition().y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        // console.log(branch.size / distance);
         if (branch.size / distance < that.config.theta) {
-          // console.log('calculate force for long distance');
           calculateForces(dx, dy, node, branch);
         } else if (branch.children) {
-          // console.log('calculate force for children');
           getForceContributions(branch, node);
         } else if (branch.data !== node) {
-          // console.log('calculate force for node');
           calculateForces(dx, dy, node, branch);
         }
       }
       const tree = this.formBarnesHutTree();
-      // console.log(tree);
       for (const node of this.nodes) {
         getForceContributions(tree, node);
       }
+      // Naive method
+      // for (let i = 0; i < this.nodes.length - 1; ++i) {
+      //   const node1 = this.nodes[i];
+      //   const pos1 = node1.getPosition();
+      //   for (let j = i + 1; j < this.nodes.length; ++j) {
+      //     const node2 = this.nodes[j];
+      //     const pos2 = node2.getPosition();
+      //     const dx = pos1.x - pos2.x;
+      //     const dy = pos1.y - pos2.y;
+      //     const distance = Math.sqrt(dx * dx + dy * dy);
+      //     const gravityForce = -2000 / Math.pow(distance + 1e-3, 3);
+      //     this.forces[i].x -= dx * gravityForce;
+      //     this.forces[i].y -= dy * gravityForce;
+      //     this.forces[j].x += dx * gravityForce;
+      //     this.forces[j].y += dy * gravityForce;
+      //   }
+      // }
     }
     // Calculate spring force
     for (const edge of this.layoutData.edges) {
@@ -327,15 +341,18 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       }
     }
     // Move nodes
-    const calculateVelocity = (velocity: number,
+    function calculateVelocity(velocity: number,
                                force: number,
-                               mass: number): number => {
-      const df = this.config.damping * velocity;
+                               mass: number): number {
+      const df = that.config.damping * velocity;
       const a = (force - df) / mass;
       velocity += a; // * time;
+      if (Math.abs(velocity) > that.config.maxVelocity) {
+        velocity = velocity > 0 ? that.config.maxVelocity :
+          -that.config.maxVelocity;
+      }
       return velocity;
-    };
-    // console.log(this.forces);
+    }
     for (let i = 0; i < this.nodes.length; ++i) {
       const item = this.nodes[i];
       const pos = item.getPosition();
