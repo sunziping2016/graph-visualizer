@@ -5,17 +5,18 @@ import Port from '@/graph/base/Port';
 import Edge from '@/graph/edge/Edge';
 import Renderable from '@/graph/base/Renderable';
 import {AnyShape} from '@/graph/base/dataOutput';
+import Node from '@/graph/node/Node';
 
 export interface LayoutEdgeData {
   from: Port;
   to: Port;
-  fromBelonging: Port;
-  toBelonging: Port;
+  fromBelonging: Node | Graph;
+  toBelonging: Node | Graph;
   edge: Edge;
 }
 
 export interface LayoutData {
-  ports: Port[];
+  ports: Array<Node | Graph>;
   edges: LayoutEdgeData[];
   children: Renderable[];
 }

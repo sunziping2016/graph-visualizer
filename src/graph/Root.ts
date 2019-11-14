@@ -40,6 +40,7 @@ export default class Root extends EventEmitter {
       if (!(port instanceof Graph || port instanceof Node)) {
         throw new Error('Wrong type of port');
       }
+      port.fixed = true;
       return port;
     });
   }

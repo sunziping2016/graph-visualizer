@@ -128,6 +128,7 @@ export interface BarnesHutGraphPhysicsData {
   centralGravity?: number;               // default 0.3
   springLength?: number;                 // default 95
   springConstant?: number;               // default 0.04
+  damping?: number;                      // default 0.09
 }
 
 export type GraphPhysicsData = BarnesHutGraphPhysicsData;
@@ -180,3 +181,5 @@ export interface Position {
   x: number;
   y: number;
 }
+
+export type Vector = Position;

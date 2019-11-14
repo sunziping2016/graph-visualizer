@@ -14,6 +14,7 @@ import GraphType from '@/graph/graph/type/GraphType';
 import GraphPhysics from '@/graph/graph/physics/GraphPhysics';
 import physicsFactory from '@/graph/graph/physics/graphPhysicsFactory';
 import {AnyShape} from '@/graph/base/dataOutput';
+import Node from '@/graph/node/Node';
 
 export default class Graph extends Port implements Renderable {
   public static getId(data: GraphData) {
@@ -28,7 +29,7 @@ export default class Graph extends Port implements Renderable {
   public fromEdges!: Set<Edge>;
   public toEdges!: Set<Edge>;
   public children!: Map<string, Renderable>;
-  public ports!: Map<string, Port>;
+  public ports!: Map<string, Node | Graph>;
   public edges!: Map<string, Edge>;
   public subgraphs!: Map<string, Graph>;
   public layouts!: GraphLayout[];
@@ -93,7 +94,7 @@ export default class Graph extends Port implements Renderable {
       }
     }
     // Create adjacency list
-    const adjacencyList: Map<Port, Port[]> = new Map();
+    const adjacencyList: Map<Node | Graph, Array<Node | Graph>> = new Map();
     const edgesData: LayoutEdgeData[] = [];
     for (const edge of this.edges.values()) {
       const from = this.findPort(edge.from.split(':'));
@@ -115,9 +116,9 @@ export default class Graph extends Port implements Renderable {
       }
     }
     // Compute connected components by DFS
-    const unvisited: Set<Port> = new Set(this.ports.values());
+    const unvisited: Set<Node | Graph> = new Set(this.ports.values());
     this.layoutsData = [];
-    const calculateConnectedComponent = (from: Port) => {
+    const calculateConnectedComponent = (from: Node | Graph) => {
       unvisited.delete(from);
       const component = this.layoutsData[this.layoutsData.length - 1];
       component.ports.push(from);
@@ -219,7 +220,7 @@ export default class Graph extends Port implements Renderable {
       children: this.graphType.render(),
     };
   }
-  public findBelongingPort(id: string): Port | null {
+  public findBelongingPort(id: string): Node | Graph | null {
     id = id.split(':')[0];
     if (this.ports.has(id)) {
       return this.ports.get(id)!;

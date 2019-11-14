@@ -104,6 +104,9 @@ export default class QuadraticEdgeType extends EdgeType {
       y: realToPosY,
     };
   }
+  public getControlPoints(): Positioned[] {
+    return [this.controlPoint];
+  }
   public render(): AnyShape {
     const children: AnyShape[] = [];
     if (this.config.fromPointer) {

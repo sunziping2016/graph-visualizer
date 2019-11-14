@@ -89,6 +89,9 @@ export default class Edge implements Renderable {
   public updatePosition() {
     this.edgeType.updatePosition();
   }
+  public getControlPoints(): Positioned[] {
+    return this.edgeType.getControlPoints();
+  }
   public render() {
     return this.edgeType.render();
   }
