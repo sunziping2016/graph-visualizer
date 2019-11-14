@@ -126,7 +126,7 @@ export interface BarnesHutGraphPhysicsData {
   theta?: number;                        // default 0.5
   gravitationalConstant?: number;        // default -2000
   centralGravity?: number;               // default 0.3
-  springLength?: number;                 // default 95
+  springLength?: number;                 // default 150
   springConstant?: number;               // default 0.04
   damping?: number;                      // default 0.09
 }

@@ -1,5 +1,5 @@
 import GraphPhysics from '@/graph/graph/physics/GraphPhysics';
-import {BarnesHutGraphPhysicsData, Vector} from '@/graph/base/dataInput';
+import {BarnesHutGraphPhysicsData, Position, Vector} from '@/graph/base/dataInput';
 import GraphLayout, {LayoutData} from '@/graph/graph/layout/GraphLayout';
 import Graph from '@/graph/graph/Graph';
 import Positioned from '@/graph/base/Positioned';
@@ -13,19 +13,142 @@ interface BarnesHutGraphPhysicsConfig {
   damping: number;
 }
 
+interface BarnesHutTree {
+  centerOfMass: Position;
+  mass: number;
+  range: {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+  };
+  children?: {
+    NW: BarnesHutTree;
+    NE: BarnesHutTree;
+    SW: BarnesHutTree;
+    SE: BarnesHutTree;
+  };
+  data?: Positioned;
+  size: number;
+}
+
 export default class BarnesHutGraphPhysics extends GraphPhysics {
   private static defaultConfig: BarnesHutGraphPhysicsConfig = {
-    theta: 0.5,
+    theta: 0,
     gravitationalConstant: -2000,
     centralGravity: 0.3,
     springLength: 150,
     springConstant: 0.04,
     damping: 0.09,
   };
+  private static splitBranch(branch: BarnesHutTree) {
+    if (branch.children) {
+      throw new Error('Cannot split branch on an already split branch');
+    }
+    const containedNode: Positioned | undefined = branch.data;
+    if (containedNode) {
+      branch.mass = 0;
+      branch.centerOfMass.x = 0;
+      branch.centerOfMass.y = 0;
+    }
+    delete branch.data;
+    const childSize = 0.5 * branch.size;
+    branch.children = {
+      NW: {
+        centerOfMass: { x: 0, y: 0},
+        mass: 0,
+        range: {
+          minX: branch.range.minX, maxX: branch.range.minX + childSize,
+          minY: branch.range.minY, maxY: branch.range.minY + childSize,
+        },
+        size: childSize,
+      },
+      NE: {
+        centerOfMass: { x: 0, y: 0},
+        mass: 0,
+        range: {
+          minX: branch.range.minX + childSize, maxX: branch.range.maxX,
+          minY: branch.range.minY, maxY: branch.range.minY + childSize,
+        },
+        size: childSize,
+      },
+      SW: {
+        centerOfMass: { x: 0, y: 0},
+        mass: 0,
+        range: {
+          minX: branch.range.minX, maxX: branch.range.minX + childSize,
+          minY: branch.range.minY + childSize, maxY: branch.range.maxY,
+        },
+        size: childSize,
+      },
+      SE: {
+        centerOfMass: { x: 0, y: 0},
+        mass: 0,
+        range: {
+          minX: branch.range.minX + childSize, maxX: branch.range.maxX,
+          minY: branch.range.minY + childSize, maxY: branch.range.maxY,
+        },
+        size: childSize,
+      },
+    };
+    if (containedNode) {
+      this.placeInTree(branch, containedNode);
+    }
+  }
+  private static placeInTree(branch: BarnesHutTree,
+                             node: Positioned): void {
+    if (!branch.children) {
+      throw new Error('Place in tree can be only called on a split branch');
+    }
+    this.updateBranchMass(branch, node);
+    const range = branch.children.NW.range;
+    const pos = node.getPosition();
+    let region: 'NW' | 'SW' | 'NE' | 'SE';
+    if (range.maxX > pos.x) {
+      if (range.maxY > pos.y) {
+        region = 'NW';
+      } else {
+        region = 'SW';
+      }
+    } else {
+      if (range.maxY > pos.y) {
+        region = 'NE';
+      } else {
+        region = 'SE';
+      }
+    }
+    const child = branch.children[region];
+    if (child.children) {
+      this.placeInTree(child, node);
+    } else if (child.data) {
+      // ignore overlapping node
+      if (child.data.getPosition().x === pos.x &&
+          child.data.getPosition().y === pos.y ) {
+        pos.x += Math.random();
+        pos.y += Math.random();
+      } else {
+        this.splitBranch(child);
+        this.placeInTree(child, node);
+      }
+    } else {
+      child.data = node;
+      this.updateBranchMass(child, node);
+    }
+  }
+  private static updateBranchMass(branch: BarnesHutTree,
+                                  node: Positioned) {
+    const nodeMass = 1;
+    const totalMass = branch.mass + nodeMass;
+    branch.centerOfMass.x = branch.centerOfMass.x * branch.mass +
+      node.getPosition().x * nodeMass;
+    branch.centerOfMass.y = branch.centerOfMass.y * branch.mass +
+      node.getPosition().y * nodeMass;
+    branch.mass = totalMass;
+  }
   private config: BarnesHutGraphPhysicsConfig;
   private layoutData: LayoutData;
-  private positionedToIndex: Map<Positioned, number>;
-  private indexToPositioned: Positioned[];
+  private nodeToIndex: Map<Positioned, number>;
+  private nodes: Positioned[];
   private forces: Vector[];
   private velocities: Vector[];
   public constructor(graph: Graph, layout: GraphLayout) {
@@ -36,8 +159,8 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       edges: [],
       children: [],
     };
-    this.positionedToIndex = new Map();
-    this.indexToPositioned = [];
+    this.nodeToIndex = new Map();
+    this.nodes = [];
     this.forces = [];
     this.velocities = [];
   }
@@ -46,39 +169,138 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
     this.config = Object.assign({},
       BarnesHutGraphPhysics.defaultConfig, config);
     this.layoutData = data;
-    this.positionedToIndex = new Map();
-    this.indexToPositioned = [];
+    this.nodeToIndex = new Map();
+    this.nodes = [];
     // Create Index
     let i = 0;
     for (; i < this.layoutData.ports.length; ++i) {
-      this.positionedToIndex.set(this.layoutData.ports[i], i);
-      this.indexToPositioned.push(this.layoutData.ports[i]);
+      this.nodeToIndex.set(this.layoutData.ports[i], i);
+      this.nodes.push(this.layoutData.ports[i]);
     }
     for (const edge of this.layoutData.edges) {
       const controlPoints = edge.edge.getControlPoints();
       for (const point of controlPoints) {
-        this.positionedToIndex.set(point, i);
-        this.indexToPositioned.push(point);
+        this.nodeToIndex.set(point, i);
+        this.nodes.push(point);
         ++i;
       }
     }
     this.forces = [];
     this.velocities = [];
-    for (i = 0; i < this.positionedToIndex.size; ++i) {
+    for (i = 0; i < this.nodeToIndex.size; ++i) {
       this.forces.push({ x: 0, y: 0 });
       this.velocities.push({ x: 0, y: 0 });
     }
   }
-  public step(): boolean {
-    // Calculate node repulsive force
-    if (this.indexToPositioned.length) {
-      // Calculate bounding box
+  public formBarnesHutTree(): BarnesHutTree {
+    if (this.nodes.length < 1) {
+      throw new Error('Expect at least one node to form Barnes Hut tree');
     }
-    // Calculate spring force
+    let minX = this.nodes[0].getPosition().x;
+    let maxX = this.nodes[0].getPosition().x;
+    let minY = this.nodes[0].getPosition().y;
+    let maxY = this.nodes[0].getPosition().y;
+    for (let i = 1; i < this.nodes.length; ++i) {
+      const positioned = this.nodes[i];
+      const pos = positioned.getPosition();
+      if (pos.x < minX) {
+        minX = pos.x;
+      }
+      if (pos.x > maxX) {
+        maxX = pos.x;
+      }
+      if (pos.y < minY) {
+        minY = pos.y;
+      }
+      if (pos.y > maxY)  {
+        maxY = pos.y;
+      }
+    }
+    const sizeDiff = Math.abs(maxX - minX) - Math.abs(maxY - minY);
+    if (sizeDiff > 0) {
+      minY -= 0.5 * sizeDiff;
+      maxY += 0.5 * sizeDiff;
+    } else {
+      minX += 0.5 * sizeDiff;
+      maxX -= 0.5 * sizeDiff;
+    }
+    const rootSize = Math.abs(maxX - minX);
+    const halfRootSize = 0.5 * rootSize;
+    const centerX = 0.5 * (minX + maxX);
+    const centerY = 0.5 * (minY + maxY);
+    const tree: BarnesHutTree = {
+      centerOfMass: { x: 0, y: 0},
+      mass: 0,
+      range: {
+        minX: centerX - halfRootSize, maxX: centerX + halfRootSize,
+        minY: centerY - halfRootSize, maxY: centerY + halfRootSize,
+      },
+      size: rootSize,
+    };
+    BarnesHutGraphPhysics.splitBranch(tree);
+    for (const node of this.nodes) {
+      BarnesHutGraphPhysics.placeInTree(tree, node);
+    }
+    return tree;
+  }
+  public step(): boolean {
     for (const force of this.forces) {
       force.x = 0;
       force.y = 0;
     }
+    // Calculate node repulsive force
+    if (this.nodes.length) {
+      const that = this;
+      function calculateForces(dx: number, dy: number,
+                               node: Positioned,
+                               branch: BarnesHutTree) {
+        if (dx === 0 && dy === 0) {
+          dx = 0.1;
+        }
+        const nodeMass = 1;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const gravityForce = that.config.gravitationalConstant * branch.mass *
+          nodeMass / Math.pow(distance, 3);
+        const force = that.forces[that.nodeToIndex.get(node)!];
+        force.x += dx * gravityForce;
+        force.y += dy * gravityForce;
+      }
+      function getForceContributions(branch: BarnesHutTree, node: Positioned) {
+        if (!branch.children) {
+          throw new Error('Get force contributions ' +
+            'can be only called on a split branch');
+        }
+        getForceContribution(branch.children.NW, node);
+        getForceContribution(branch.children.NE, node);
+        getForceContribution(branch.children.SW, node);
+        getForceContribution(branch.children.SE, node);
+      }
+      function getForceContribution(branch: BarnesHutTree, node: Positioned) {
+        if (!branch.children && !branch.data) {
+          return;
+        }
+        const dx = branch.centerOfMass.x - node.getPosition().x;
+        const dy = branch.centerOfMass.y = node.getPosition().y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        // console.log(branch.size / distance);
+        if (branch.size / distance < that.config.theta) {
+          // console.log('calculate force for long distance');
+          calculateForces(dx, dy, node, branch);
+        } else if (branch.children) {
+          // console.log('calculate force for children');
+          getForceContributions(branch, node);
+        } else if (branch.data !== node) {
+          // console.log('calculate force for node');
+          calculateForces(dx, dy, node, branch);
+        }
+      }
+      const tree = this.formBarnesHutTree();
+      // console.log(tree);
+      for (const node of this.nodes) {
+        getForceContributions(tree, node);
+      }
+    }
+    // Calculate spring force
     for (const edge of this.layoutData.edges) {
       if (edge.fromBelonging !== edge.toBelonging) {
         const items = [
@@ -97,10 +319,10 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
             (edgeLength - distance) / distance;
           const fx = dx * springForce;
           const fy = dy * springForce;
-          this.forces[this.positionedToIndex.get(item1)!].x += fx;
-          this.forces[this.positionedToIndex.get(item1)!].y += fy;
-          this.forces[this.positionedToIndex.get(item2)!].x -= fx;
-          this.forces[this.positionedToIndex.get(item2)!].y -= fy;
+          this.forces[this.nodeToIndex.get(item1)!].x += fx;
+          this.forces[this.nodeToIndex.get(item1)!].y += fy;
+          this.forces[this.nodeToIndex.get(item2)!].x -= fx;
+          this.forces[this.nodeToIndex.get(item2)!].y -= fy;
         }
       }
     }
@@ -114,8 +336,8 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       return velocity;
     };
     // console.log(this.forces);
-    for (let i = 0; i < this.indexToPositioned.length; ++i) {
-      const item = this.indexToPositioned[i];
+    for (let i = 0; i < this.nodes.length; ++i) {
+      const item = this.nodes[i];
       const pos = item.getPosition();
       const force = this.forces[i];
       const velocity = this.velocities[i];
