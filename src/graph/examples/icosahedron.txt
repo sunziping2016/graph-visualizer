@@ -80,151 +80,181 @@
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "0",
       "to": "1"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "1",
       "to": "2"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "2",
       "to": "0"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "0",
       "to": "3"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "3",
       "to": "2"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "3",
       "to": "4"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "4",
       "to": "0"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "4",
       "to": "5"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "5",
       "to": "0"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "5",
       "to": "1"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "1",
       "to": "8"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "8",
       "to": "5"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "5",
       "to": "7"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "7",
       "to": "4"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "4",
       "to": "6"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "6",
       "to": "3"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "3",
       "to": "10"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "10",
       "to": "2"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "2",
       "to": "9"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "9",
       "to": "1"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "8",
       "to": "9"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "9",
       "to": "10"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "10",
       "to": "6"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "6",
       "to": "7"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "7",
       "to": "8"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "11",
       "to": "8"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "11",
       "to": "9"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "11",
       "to": "10"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "11",
       "to": "6"
     },
     {
       "type": "edge",
+      "shape": "straight",
       "from": "11",
       "to": "7"
     }

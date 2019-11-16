@@ -37,7 +37,7 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
   private static defaultConfig: BarnesHutGraphPhysicsConfig = {
     theta: 0,
     gravitationalConstant: -2000,
-    centralGravity: 0.3,
+    centralGravity: 0.05,
     springLength: 150,
     springConstant: 0.04,
     damping: 0.09,
@@ -251,6 +251,17 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       force.y = 0;
     }
     const that = this;
+    // Calculate central gravity
+    for (let i = 0; i < this.nodes.length; ++i) {
+      const node = this.nodes[i];
+      const dx = -node.getPosition().x;
+      const dy = -node.getPosition().y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const gravityForce = (distance === 0) ? 0 :
+        (this.config.centralGravity / distance);
+      this.forces[i].x = dx * gravityForce;
+      this.forces[i].y = dy * gravityForce;
+    }
     // Calculate node repulsive force
     if (this.nodes.length) {
       function calculateForces(dx: number, dy: number,
