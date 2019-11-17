@@ -24,7 +24,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
-import {globalRoot} from '@/graph/Root';
+import {globalGraphRoot} from '@/graph/Root';
 import MyCanvas from '@/components/MyCanvas.vue';
 import Port from '@/graph/base/Port';
 
@@ -71,8 +71,8 @@ export default class Graph extends Vue {
   }
   public updateSize() {
     // noinspection SuspiciousTypeOfGuard
-    if (globalRoot.child instanceof Port) {
-      this.size = globalRoot.child.getBoundingBoxSize();
+    if (globalGraphRoot.child instanceof Port) {
+      this.size = globalGraphRoot.child.getBoundingBoxSize();
     }
   }
   get mainCanvasData() {
@@ -190,13 +190,13 @@ export default class Graph extends Vue {
     const id = (this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y);
     if (id) {
       this.draggedId = id;
-      globalRoot.setFixed([id]);
+      globalGraphRoot.setFixed([id]);
     }
   }
   public mouseup() {
     this.mouseDragActive = false;
     this.draggedId = null;
-    globalRoot.clearFixed();
+    globalGraphRoot.clearFixed();
   }
   public mousemove(e: MouseEvent) {
     if (e.buttons === 0) {
@@ -210,10 +210,10 @@ export default class Graph extends Vue {
       const deltaX = newCoords.x - this.mouseLastCoords.x;
       const deltaY = newCoords.y - this.mouseLastCoords.y;
       if (this.draggedId) {
-          globalRoot.movePort(this.draggedId, {
-              deltaX: deltaX / this.scale,
-              deltaY: deltaY / this.scale,
-          });
+        globalGraphRoot.movePort(this.draggedId, {
+          deltaX: deltaX / this.scale,
+          deltaY: deltaY / this.scale,
+        });
       } else {
         this.x += deltaX;
         this.y += deltaY;

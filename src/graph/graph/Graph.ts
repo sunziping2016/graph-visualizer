@@ -66,7 +66,7 @@ export default class Graph extends Port implements Renderable {
         const type = renderableFactory(child);
         const id = type.getId(child);
         if (this.children.has(id)) {
-          throw new Error('Duplicated id');
+          throw new Error(`Duplicated id ${id}`);
         }
         let newChild: Renderable;
         if (oldChildren && oldChildren.has(id) &&

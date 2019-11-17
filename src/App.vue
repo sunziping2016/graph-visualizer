@@ -113,14 +113,14 @@
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import CollapsiblePane from './components/CollapsiblePane.vue';
 import Graph from './components/Graph.vue';
-import {
-  globalRoot,
-  globalParsers,
-  globalExamples,
-} from './graph/Root';
 import 'vue-awesome/icons/upload';
 import 'vue-awesome/icons/sync';
-import _ from 'lodash';
+import {throttle} from 'lodash-es';
+import {globalGraphRoot} from '@/graph/Root';
+import {graphParsers} from '@/graph/parser';
+import {graphExamples} from './graph/examples';
+import {Debounce} from '@/debounce-decorator';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 @Component({
   components: {
@@ -153,16 +153,17 @@ export default class App extends Vue {
   private parseError = null;
   private parsedInput = '';
   // noinspection JSUnusedLocalSymbols
-  private examples = globalExamples;
+  private examples = graphExamples;
   // Rendered data
   // noinspection JSMismatchedCollectionQueryUpdate
-  private rendered: object[] = [];
+  private rendered: AnyShape[] = [];
+  @Debounce(10000 / 60)
   public parseInput() {
     try {
       if (this.rawInput) {
-        const parsed = globalParsers[this.parser](this.rawInput);
+        const parsed = graphParsers[this.parser](this.rawInput);
         this.parsedInput = JSON.stringify(parsed, null, 2);
-        globalRoot.updateData(parsed);
+        globalGraphRoot.updateData(parsed);
       } else {
         this.parsedInput = '';
       }
@@ -176,10 +177,8 @@ export default class App extends Vue {
   public mounted() {
     window.addEventListener('resize', this.getSize);
     this.updateCanvasSize();
-    globalRoot.addEventListener('render', _.throttle((data: object[]) => {
+    globalGraphRoot.addEventListener('render', throttle((data: AnyShape[]) => {
       this.rendered = data;
-      /* tslint:disable:no-console */
-      // console.log(JSON.stringify(data, null, 2));
     }, 1000 / 60));
   }
   public beforeDestroy() {
@@ -198,10 +197,12 @@ export default class App extends Vue {
     this.parseInput();
   }
   public redraw() {
-    globalRoot.fullyUpdateData(JSON.parse(this.parsedInput));
+    if (this.parsedInput) {
+      globalGraphRoot.fullyUpdateData(JSON.parse(this.parsedInput));
+    }
   }
   public selectExample(i: number) {
-    const example = globalExamples[i];
+    const example = graphExamples[i];
     this.parser = example.parser;
     this.rawInput = example.content;
   }

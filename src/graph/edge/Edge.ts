@@ -57,7 +57,7 @@ export default class Edge implements Renderable {
     const fromPort = this.graph.findPort(this.from.split(':'));
     const toPort = this.graph.findPort(this.to.split(':'));
     if (!fromPort || !toPort) {
-      throw new Error('Unknown start or end port for edge');
+      throw new Error(`Unknown start or end port ${this.from}-${this.to} for edge`);
     }
     this.fromPort = fromPort;
     this.toPort = toPort;

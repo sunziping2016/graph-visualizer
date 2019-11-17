@@ -1,6 +1,10 @@
 import EventEmitter from '@/graph/base/EventEmitter';
 import { RenderableData } from '@/graph/base/dataInput';
 import renderableFactory from '@/graph/base/renderableFactory';
+import Renderable from '@/graph/base/Renderable';
+import Port from '@/graph/base/Port';
+import Graph from '@/graph/graph/Graph';
+import Node from '@/graph/node/Node';
 
 export default class Root extends EventEmitter {
   public ctx: CanvasRenderingContext2D;
@@ -97,68 +101,4 @@ export default class Root extends EventEmitter {
   }
 }
 
-export const globalRoot = new Root();
-// @ts-ignore
-window.globalRoot = globalRoot;
-export const globalParsers
-    : { [input: string]: (input: string) => RenderableData } = {
-  json(input: string): RenderableData { return JSON.parse(input); },
-  graphviz(/* input: string */): RenderableData { throw new Error('Not implemented'); },
-};
-
-// Examples
-import stdThreadJoinGv from '!raw-loader!./examples/stdThreadJoin.gv';
-import stdThreadJoinJson from '!raw-loader!./examples/stdThreadJoin.txt';
-import recordJson from '!raw-loader!./examples/record.txt';
-import subgraphJson from '!raw-loader!./examples/subgraph.txt';
-import icosahedronJson from '!raw-loader!./examples/icosahedron.txt';
-import tableJson from '!raw-loader!./examples/table.txt';
-import edgeJson from '!raw-loader!./examples/edge.txt';
-import Renderable from '@/graph/base/Renderable';
-import Port from '@/graph/base/Port';
-import Graph from '@/graph/graph/Graph';
-import Node from '@/graph/node/Node';
-
-interface Example {
-  name: string;
-  parser: string;
-  content: string;
-}
-
-export const globalExamples: Example[] = [
-  {
-    name: 'stdThreadJoinGv',
-    parser: 'graphviz',
-    content: stdThreadJoinGv,
-  },
-  {
-    name: 'stdThreadJoinJson',
-    parser: 'json',
-    content: stdThreadJoinJson,
-  },
-  {
-    name: 'record',
-    parser: 'json',
-    content: recordJson,
-  },
-  {
-    name: 'subgraph',
-    parser: 'json',
-    content: subgraphJson,
-  },
-  {
-    name: 'icosahedronJson',
-    parser: 'json',
-    content: icosahedronJson,
-  },
-  {
-    name: 'table',
-    parser: 'json',
-    content: tableJson,
-  },
-  {
-    name: 'edge',
-    parser: 'json',
-    content: edgeJson,
-  },
-];
+export const globalGraphRoot = new Root();
