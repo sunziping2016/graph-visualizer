@@ -104,7 +104,7 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
     }
     this.updateBranchMass(branch, node);
     const range = branch.children.NW.range;
-    const pos = node.getPosition();
+    const pos = node.position;
     let region: 'NW' | 'SW' | 'NE' | 'SE';
     if (range.maxX > pos.x) {
       if (range.maxY > pos.y) {
@@ -124,8 +124,8 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       this.placeInTree(child, node);
     } else if (child.data) {
       // ignore overlapping node
-      if (child.data.getPosition().x === pos.x &&
-          child.data.getPosition().y === pos.y ) {
+      if (child.data.position.x === pos.x &&
+          child.data.position.y === pos.y ) {
         pos.x += Math.random() - 0.5;
         pos.y += Math.random() - 0.5;
       } else {
@@ -142,9 +142,9 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
     const nodeMass = 1;
     const totalMass = branch.mass + nodeMass;
     branch.centerOfMass.x = (branch.centerOfMass.x * branch.mass +
-      node.getPosition().x * nodeMass) / totalMass;
+      node.position.x * nodeMass) / totalMass;
     branch.centerOfMass.y = (branch.centerOfMass.y * branch.mass +
-      node.getPosition().y * nodeMass) / totalMass;
+      node.position.y * nodeMass) / totalMass;
     branch.mass = totalMass;
   }
   private config: BarnesHutGraphPhysicsConfig;
@@ -198,13 +198,13 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
     if (this.nodes.length < 1) {
       throw new Error('Expect at least one node to form Barnes Hut tree');
     }
-    let minX = this.nodes[0].getPosition().x;
-    let maxX = this.nodes[0].getPosition().x;
-    let minY = this.nodes[0].getPosition().y;
-    let maxY = this.nodes[0].getPosition().y;
+    let minX = this.nodes[0].position.x;
+    let maxX = this.nodes[0].position.x;
+    let minY = this.nodes[0].position.y;
+    let maxY = this.nodes[0].position.y;
     for (let i = 1; i < this.nodes.length; ++i) {
       const positioned = this.nodes[i];
-      const pos = positioned.getPosition();
+      const pos = positioned.position;
       if (pos.x < minX) {
         minX = pos.x;
       }
@@ -254,8 +254,8 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
     // Calculate central gravity
     for (let i = 0; i < this.nodes.length; ++i) {
       const node = this.nodes[i];
-      const dx = -node.getPosition().x;
-      const dy = -node.getPosition().y;
+      const dx = -node.position.x;
+      const dy = -node.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       const gravityForce = (distance === 0) ? 0 :
         (this.config.centralGravity / distance);
@@ -292,8 +292,8 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
         if (!branch.children && !branch.data) {
           return;
         }
-        const dx = branch.centerOfMass.x - node.getPosition().x;
-        const dy = branch.centerOfMass.y - node.getPosition().y;
+        const dx = branch.centerOfMass.x - node.position.x;
+        const dy = branch.centerOfMass.y - node.position.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (branch.size / distance < that.config.theta) {
           calculateForces(dx, dy, node, branch);
@@ -310,10 +310,10 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
       // Naive method
       // for (let i = 0; i < this.nodes.length - 1; ++i) {
       //   const node1 = this.nodes[i];
-      //   const pos1 = node1.getPosition();
+      //   const pos1 = node1.position;
       //   for (let j = i + 1; j < this.nodes.length; ++j) {
       //     const node2 = this.nodes[j];
-      //     const pos2 = node2.getPosition();
+      //     const pos2 = node2.position;
       //     const dx = pos1.x - pos2.x;
       //     const dy = pos1.y - pos2.y;
       //     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -337,8 +337,8 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
           const item1 = items[i];
           const item2 = items[i + 1];
           const edgeLength = this.config.springLength / (items.length - 1);
-          const dx = item1.getPosition().x - item2.getPosition().x;
-          const dy = item1.getPosition().y - item2.getPosition().y;
+          const dx = item1.position.x - item2.position.x;
+          const dy = item1.position.y - item2.position.y;
           const distance = Math.max(Math.sqrt(dx * dx + dy * dy), 0.01);
           const springForce = this.config.springConstant *
             (edgeLength - distance) / distance;
@@ -366,7 +366,7 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
     }
     for (let i = 0; i < this.nodes.length; ++i) {
       const item = this.nodes[i];
-      const pos = item.getPosition();
+      const pos = item.position;
       const force = this.forces[i];
       const velocity = this.velocities[i];
       if (item.fixed) {
@@ -376,10 +376,10 @@ export default class BarnesHutGraphPhysics extends GraphPhysics {
         velocity.x = calculateVelocity(velocity.x, force.x, 1);
         velocity.y = calculateVelocity(velocity.y, force.y, 1);
       }
-      item.setPosition({
+      item.position = {
         x: pos.x + velocity.x, // * time
         y: pos.y + velocity.y, // * time
-      });
+      };
     }
     for (const edge of this.layoutData.edges) {
       edge.edge.updatePosition();

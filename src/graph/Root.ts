@@ -48,6 +48,7 @@ export default class Root extends EventEmitter {
     for (const port of this.fixed) {
       port.fixed = false;
     }
+    this.fixed = [];
   }
   public movePort(id: string,
                   delta: { deltaX: number, deltaY: number }) {
@@ -58,8 +59,8 @@ export default class Root extends EventEmitter {
     if (!(port instanceof Graph || port instanceof Node)) {
       throw new Error('Wrong type of port');
     }
-    port.getPosition().x += delta.deltaX;
-    port.getPosition().y += delta.deltaY;
+    port.position.x += delta.deltaX;
+    port.position.y += delta.deltaY;
     for (const edge of [...port.fromEdges, ...port.toEdges]) {
       edge.updatePosition();
     }

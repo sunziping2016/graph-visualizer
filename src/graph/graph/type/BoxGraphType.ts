@@ -69,7 +69,7 @@ export default class BoxGraphType extends GraphType {
       width: layoutContentSize.width + 2 * newConfig.padding,
       height: layoutContentSize.height + 2 * newConfig.padding,
     };
-    this.parent.componentLayout.setPosition({ x: 0, y: 0 });
+    this.parent.componentLayout.position = { x: 0, y: 0 };
     this.textPosition = { x: 0, y: 0 };
     if (newConfig.label) {
       if (newConfig.labelPosition === 'left' ||
@@ -80,12 +80,12 @@ export default class BoxGraphType extends GraphType {
             2 * newConfig.padding;
         }
         if (newConfig.labelPosition === 'left') {
-          this.parent.componentLayout.getPosition().x = (this.textSize.width +
+          this.parent.componentLayout.position.x = (this.textSize.width +
             newConfig.spaceBetween) / 2;
           this.textPosition.x = -(layoutContentSize.width +
             newConfig.spaceBetween) / 2;
         } else {
-          this.parent.componentLayout.getPosition().x = -(this.textSize.width +
+          this.parent.componentLayout.position.x = -(this.textSize.width +
             newConfig.spaceBetween) / 2;
           this.textPosition.x = (layoutContentSize.width +
             newConfig.spaceBetween) / 2;
@@ -97,12 +97,12 @@ export default class BoxGraphType extends GraphType {
           this.contentSize.width = this.textSize.width + 2 * newConfig.padding;
         }
         if (newConfig.labelPosition === 'bottom') {
-          this.parent.componentLayout.getPosition().y = -(this.textSize.height +
+          this.parent.componentLayout.position.y = -(this.textSize.height +
             newConfig.spaceBetween) / 2;
           this.textPosition.y = (layoutContentSize.height +
             newConfig.spaceBetween) / 2;
         } else {
-          this.parent.componentLayout.getPosition().y = (this.textSize.height +
+          this.parent.componentLayout.position.y = (this.textSize.height +
             newConfig.spaceBetween) / 2;
           this.textPosition.y = -(layoutContentSize.height +
             newConfig.spaceBetween) / 2;

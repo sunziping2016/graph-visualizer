@@ -36,7 +36,7 @@ export default class LinearComponentLayout extends ComponentLayout {
         const deltaX = (newConfig.direction === 'LR' ?
           componentsSize[i].width / 2 : -componentsSize[i].width / 2) +
           begin;
-        components[i].setPosition({ x: deltaX, y: 0 });
+        components[i].position = { x: deltaX, y: 0 };
         if (newConfig.direction === 'LR') {
           begin += componentsSize[i].width + newConfig.spaceBetween;
         } else {
@@ -55,7 +55,7 @@ export default class LinearComponentLayout extends ComponentLayout {
         const deltaY = (newConfig.direction === 'DT' ?
           -componentsSize[i].height / 2 : componentsSize[i].height / 2) +
           begin;
-        components[i].setPosition({ x: 0, y: deltaY });
+        components[i].position = { x: 0, y: deltaY };
         if (newConfig.direction === 'DT') {
           begin -= componentsSize[i].height + newConfig.spaceBetween;
         } else {

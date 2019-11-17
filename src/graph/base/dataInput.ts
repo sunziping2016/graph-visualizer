@@ -117,6 +117,7 @@ export interface KamadaKawaiGraphLayoutData {
   type: 'KamadaKawai';
   springLength?: number;                 // default 150
   springConstant?: number;               // default 0.05
+  preferredEdgeDirection?: number | 'any'; // angle in degree, default 'any'
 }
 
 export type GraphLayoutData = KamadaKawaiGraphLayoutData;

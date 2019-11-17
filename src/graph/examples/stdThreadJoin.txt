@@ -5,7 +5,8 @@
   "layout": {
     "type": "KamadaKawai",
     "springLength": 150,
-    "direction": "LR"
+    "direction": "LR",
+    "preferredEdgeDirection": 0
   },
   "children": [
     {

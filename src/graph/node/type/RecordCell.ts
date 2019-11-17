@@ -142,7 +142,7 @@ export default class RecordCell extends Port {
         throw new Error('Non-field record should have children');
       }
       rendered = this.children.map((x) => {
-        const position = x.getPosition();
+        const position = x.position;
         return {
           is: 'group',
           x: position.x,

@@ -3,7 +3,7 @@ import {Position} from '@/graph/base/dataInput';
 export default class Positioned {
   public parent: Positioned | null;
   public fixed: boolean;
-  protected position: Position;
+  public position: Position;
   public constructor(parent: Positioned | null) {
     this.parent = parent;
     this.fixed = false;

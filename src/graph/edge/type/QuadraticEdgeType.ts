@@ -56,10 +56,10 @@ export default class QuadraticEdgeType extends EdgeType {
     const toPort = this.parent.toPort;
     const fromPos = fromPort.getAbsolutePosition(this.parent.parent);
     const toPos = toPort.getAbsolutePosition(this.parent.parent);
-    this.controlPoint.setPosition({
+    this.controlPoint.position = {
       x: 0.5 * (fromPos.x + toPos.x),
       y: 0.5 * (fromPos.y + toPos.y),
-    });
+    };
     this.updatePosition();
   }
   public updatePosition(): void {
@@ -70,7 +70,7 @@ export default class QuadraticEdgeType extends EdgeType {
     const toPort = this.parent.toPort;
     const fromPos = fromPort.getAbsolutePosition(this.parent.parent);
     const toPos = toPort.getAbsolutePosition(this.parent.parent);
-    const viaPos = this.controlPoint.getPosition();
+    const viaPos = this.controlPoint.position;
     this.fromAngle = Math.atan2(viaPos.y - fromPos.y, viaPos.x - fromPos.x);
     this.toAngle = Math.PI + Math.atan2(toPos.y - viaPos.y, toPos.x - viaPos.x);
     const fromDistance = fromPort.distanceToBorder(this.fromAngle);
@@ -135,8 +135,8 @@ export default class QuadraticEdgeType extends EdgeType {
       is: 'quadraticLine',
       points: [
         this.lineFromPos.x, this.lineFromPos.y,
-        this.controlPoint.getPosition().x,
-        this.controlPoint.getPosition().y,
+        this.controlPoint.position.x,
+        this.controlPoint.position.y,
         this.lineToPos.x, this.lineToPos.y,
       ],
       stroke: this.config.lineColor,

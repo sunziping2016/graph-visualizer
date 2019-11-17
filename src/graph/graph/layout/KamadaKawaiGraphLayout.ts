@@ -8,12 +8,14 @@ import {AnyShape} from '@/graph/base/dataOutput';
 interface KamadaKawaiGraphLayoutConfig {
   springLength: number;
   springConstant: number;
+  preferredEdgeDirection: number | 'any';
 }
 
 export default class KamadaKawaiGraphLayout extends GraphLayout {
   private static defaultConfig: KamadaKawaiGraphLayoutConfig = {
     springLength: 150,
     springConstant: 0.05,
+    preferredEdgeDirection: 'any',
   };
   private contentSize: Size;
   constructor(graph: Graph, parent: Positioned | null) {
@@ -33,14 +35,14 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
     // Initial random placement
     for (const port of data.ports) {
       if (!port.initialPlaced) {
-        port.setPosition({
+        port.position = {
           x: newConfig.springLength * ( Math.random() - 0.5),
           y: newConfig.springLength * ( Math.random() - 0.5),
-        });
+        };
         port.initialPlaced = true;
       }
     }
-      // Compute distance matrix by Floyd Warshall
+    // Compute distance matrix by Floyd Warshall
     const distanceMatrix: number[][] = [];
     for (let i = 0; i < data.ports.length; ++i) {
       distanceMatrix.push(Array(data.ports.length).fill(Infinity));
@@ -88,10 +90,10 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
       energyMatrix.push(Array(data.ports.length));
     }
     for (let m = 0; m < data.ports.length; ++m) {
-      const mPos = data.ports[m].getPosition();
+      const mPos = data.ports[m].position;
       energyMatrix[m][m] = [0, 0];
       for (let i = m + 1; i < data.ports.length; ++i) {
-        const iPos = data.ports[i].getPosition();
+        const iPos = data.ports[i].position;
         const denominator = 1.0 / Math.sqrt(
           Math.pow(mPos.x - iPos.x, 2) + Math.pow(mPos.y - iPos.y, 2));
         energyMatrix[m][i] = [
@@ -142,7 +144,7 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
       if (maxEnergy <= threshold) {
         break;
       }
-      const mPos = data.ports[m].getPosition();
+      const mPos = data.ports[m].position;
       let delta = maxEnergy;
       let subIterations = 0;
       while (delta > threshold && subIterations < maxInnerIterations) {
@@ -153,7 +155,7 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
         let d2eDy2 = 0;
         for (let i = 0; i < data.ports.length; ++i) {
           if (i !== m) {
-            const iPos = data.ports[i].getPosition();
+            const iPos = data.ports[i].position;
             const factor = 1.0 / Math.pow(Math.pow(mPos.x - iPos.x, 2) +
               Math.pow(mPos.y - iPos.y, 2), 1.5);
             const k = kMatrix[m][i];
@@ -176,7 +178,7 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
         for (let i = 0; i < data.ports.length; ++i) {
           if (i !== m) {
             const [oldDx, oldDy] = energyMatrix[m][i];
-            const iPos = data.ports[i].getPosition();
+            const iPos = data.ports[i].position;
             const factor = 1.0 / Math.sqrt(
               Math.pow(mPos.x - iPos.x, 2) + Math.pow(mPos.y - iPos.y, 2));
             const deltaX = kMatrix[m][i] * (mPos.x - iPos.x) *
@@ -199,12 +201,36 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
         deDy = energySum[m][1];
       } // for kamada kawai inner iteration
     } // for kamada kawai outer iteration
-    // Save results for further evaluation
+    // Rotate graph to satisfy preferred edge direction
+    if (typeof newConfig.preferredEdgeDirection === 'number') {
+      const preferredEdgeDirection: number = newConfig.preferredEdgeDirection /
+        180 * Math.PI;
+      let totalX = 0;
+      let totalY = 0;
+      for (const edge of data.edges) {
+        totalX += edge.toBelonging.position.x - edge.fromBelonging.position.x;
+        totalY += edge.toBelonging.position.y - edge.fromBelonging.position.y;
+      }
+      const currentAngle = Math.atan2(totalY, totalX);
+      const rotateAngle = preferredEdgeDirection - currentAngle;
+      const rotateMatrix: number[][] = [
+        [Math.cos(rotateAngle), -Math.sin(rotateAngle)],
+        [Math.sin(rotateAngle), Math.cos(rotateAngle)],
+      ];
+      for (const node of data.ports) {
+        node.position = {
+          x: rotateMatrix[0][0] * node.position.x +
+            rotateMatrix[0][1] * node.position.y,
+          y: rotateMatrix[1][0] * node.position.x +
+            rotateMatrix[1][1] * node.position.y,
+        };
+      }
+    }
     // Calculate component size and position
     const upperLeft = [Infinity, Infinity];
     const lowerRight = [-Infinity, -Infinity];
     for (const port of data.ports) {
-      const pos = port.getPosition();
+      const pos = port.position;
       const size = port.getBoundingBoxSize();
       const halfWidth = size.width / 2;
       const halfHeight = size.height / 2;
@@ -231,8 +257,8 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
     };
     // Move ports to center
     for (const port of data.ports) {
-      port.getPosition().x -= position.x;
-      port.getPosition().y -= position.y;
+      port.position.x -= position.x;
+      port.position.y -= position.y;
     }
     this.informAllEdgesFullyUpdatePosition();
   } // solve method

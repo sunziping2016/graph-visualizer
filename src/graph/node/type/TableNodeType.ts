@@ -198,10 +198,10 @@ export default class TableNodeType extends NodeType {
             upperLeftX - this.tableConfig.cellSpacing;
           const height = accRowHeight[rowOffset + rowSpan] -
             upperLeftY - this.tableConfig.cellSpacing;
-          cell.setPosition({
+          cell.position = {
             x: upperLeftX + width / 2 - this.contentSize.width / 2,
             y: upperLeftY + height / 2 - this.contentSize.height / 2,
-          });
+          };
           cell.cellSize = { width, height };
         }
       }
