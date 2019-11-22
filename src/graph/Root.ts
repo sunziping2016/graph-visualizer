@@ -96,7 +96,9 @@ export default class Root extends EventEmitter {
   }
   public informRender() {
     if (this.child) {
-      this.emit('render', [this.child.render()]);
+      const data = [this.child.render()];
+      Object.freeze(data);
+      this.emit('render', data);
     }
   }
 }

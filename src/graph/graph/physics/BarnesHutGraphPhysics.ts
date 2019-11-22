@@ -35,7 +35,7 @@ interface BarnesHutTree {
 
 export default class BarnesHutGraphPhysics extends GraphPhysics {
   private static defaultConfig: BarnesHutGraphPhysicsConfig = {
-    theta: 0,
+    theta: 1,
     gravitationalConstant: -2000,
     centralGravity: 0.05,
     springLength: 150,

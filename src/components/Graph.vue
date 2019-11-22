@@ -7,7 +7,7 @@
     ></my-canvas>
     <div class="thumbnail" :style="{
       width: thumbnailWidth + 'px',
-      height: thumbnailHeight + 'px',
+      height: thumbnailHeight + 'px'
     }">
       <my-canvas ref="thumbnailCanvas"
                  :width="thumbnailWidth" :height="thumbnailHeight"

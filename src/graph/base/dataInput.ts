@@ -124,7 +124,7 @@ export type GraphLayoutData = KamadaKawaiGraphLayoutData;
 
 export interface BarnesHutGraphPhysicsData {
   type: 'BarnesHut';
-  theta?: number;                        // default 0.5
+  theta?: number;                        // default 1
   gravitationalConstant?: number;        // default -2000
   centralGravity?: number;               // default 0.3
   springLength?: number;                 // default 150
