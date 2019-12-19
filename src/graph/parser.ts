@@ -1,5 +1,7 @@
 import {EdgeData, GraphData, NodeData, RenderableData} from '@/graph/base/dataInput';
 import parser from 'dotparser';
+import DotScanner, {TokenEnum} from '@/graph/dot/DotScanner';
+import DotParser from '@/graph/dot/DotParser';
 
 const alnumChars: string = '0123456789' +
   'abcdefghijklmnopqrstuvwxyz' +
@@ -50,7 +52,7 @@ export const graphParsers
     if (!ast[0]) {
       throw new Error('Expect one root element');
     }
-    const directed = ast[0].type === 'digraph';
+    // const directed = ast[0].type === 'digraph';
     function parseNode(data: any): NodeData {
       const result: NodeData = {
         type: 'node',
@@ -199,5 +201,16 @@ export const graphParsers
       return result;
     }
     return parseGraph(ast[0]);
+  },
+  xdot(input: string, config?: GraphParserConfig) {
+    const dotScanner = new DotScanner();
+    const dotParser = new DotParser(dotScanner.scan(input));
+    // tslint:disable-next-line:no-console
+    console.log(dotParser.parse());
+    return {
+      type: 'graph',
+      id: 'test',
+      shape: 'box',
+    };
   },
 };
