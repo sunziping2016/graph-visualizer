@@ -2,7 +2,7 @@ import {EdgeData, GraphData, NodeData, RenderableData} from '@/graph/base/dataIn
 import parser from 'dotparser';
 import DotScanner, {TokenEnum} from '@/graph/dot/DotScanner';
 import DotParser from '@/graph/dot/DotParser';
-import {xdotAttrPass} from '@/graph/dot/pass';
+import {xdotAttrPass} from '@/graph/dot/passes';
 
 const alnumChars: string = '0123456789' +
   'abcdefghijklmnopqrstuvwxyz' +

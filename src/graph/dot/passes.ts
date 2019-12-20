@@ -6,13 +6,12 @@ export function xdotAttrPass(graph: DotGraph) {
     switch (element.type) {
       case 'graph':
       case 'subgraph':
-        for (const attr of ['_draw_', '_ldraw_', '_hdraw_', '_tdraw_',
-                            '_hldraw_', '_tldraw_']) {
+        for (const attr of ['_draw_', '_ldraw_']) {
           if (element.attrs[attr]) {
             const parser = new XDotAttrParser(element.attrs[attr]);
             const newShapes = parser.parse();
-            element.shapes = element.shapes ?
-              element.shapes.concat(newShapes) : newShapes;
+            element.shapes = element.shapes || {};
+            element.shapes[attr] = newShapes;
           }
         }
         for (const child of element.children) {
@@ -24,8 +23,8 @@ export function xdotAttrPass(graph: DotGraph) {
           if (element.attrs[attr]) {
             const parser = new XDotAttrParser(element.attrs[attr]);
             const newShapes = parser.parse();
-            element.shapes = element.shapes ?
-              element.shapes.concat(newShapes) : newShapes;
+            element.shapes = element.shapes || {};
+            element.shapes[attr] = newShapes;
           }
         }
         break;
@@ -35,8 +34,8 @@ export function xdotAttrPass(graph: DotGraph) {
           if (element.attrs[attr]) {
             const parser = new XDotAttrParser(element.attrs[attr]);
             const newShapes = parser.parse();
-            element.shapes = element.shapes ?
-              element.shapes.concat(newShapes) : newShapes;
+            element.shapes = element.shapes || {};
+            element.shapes[attr] = newShapes;
           }
         }
         break;

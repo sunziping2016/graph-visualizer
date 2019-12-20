@@ -10,7 +10,7 @@ export interface DotNodeId {
 
 export interface DotCommonElement {
   attrs: { [attr: string]: string };
-  shapes?: Shape[];
+  shapes?: { [draw: string]: Shape[] };
 }
 
 export interface DotCommonGraph extends DotCommonElement {
