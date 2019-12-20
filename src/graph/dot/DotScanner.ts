@@ -70,10 +70,8 @@ export default class DotScanner extends BaseScanner<TokenEnum> {
     for (let [type, text] of super.scan(input)) {
       if (type === TokenEnum.STR_ID) {
         text = text.slice(1, -1);
-        text = text.replace('\\\r\n', '');
-        text = text.replace('\\\r', '');
-        text = text.replace('\\\r', '');
-        text = text.replace('\\"', '"');
+        text = text.replace(/\\(?:\r\n|\r|\n)/g, '');
+        text = text.replace(/\\"/g, '"');
         type = TokenEnum.ID;
       } else if (type === TokenEnum.HTML_ID) {
         text = text.slice(1, -1);

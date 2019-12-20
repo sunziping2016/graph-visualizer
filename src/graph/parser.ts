@@ -2,6 +2,7 @@ import {EdgeData, GraphData, NodeData, RenderableData} from '@/graph/base/dataIn
 import parser from 'dotparser';
 import DotScanner, {TokenEnum} from '@/graph/dot/DotScanner';
 import DotParser from '@/graph/dot/DotParser';
+import {xdotAttrPass} from '@/graph/dot/pass';
 
 const alnumChars: string = '0123456789' +
   'abcdefghijklmnopqrstuvwxyz' +
@@ -20,6 +21,7 @@ function generateId(): string {
 }
 
 function unescapeString(str: string): string {
+  // FIXME
   str = str.replace('\\n', '\n');
   str = str.replace('\\r', '\r');
   str = str.replace('\\t', '\t');
@@ -205,8 +207,10 @@ export const graphParsers
   xdot(input: string, config?: GraphParserConfig) {
     const dotScanner = new DotScanner();
     const dotParser = new DotParser(dotScanner.scan(input));
+    const graph = dotParser.parse();
+    xdotAttrPass(graph);
     // tslint:disable-next-line:no-console
-    console.log(dotParser.parse());
+    console.log(graph);
     return {
       type: 'graph',
       id: 'test',
