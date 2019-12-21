@@ -9,6 +9,13 @@ export default abstract class GraphType {
   }
   public abstract updateData(data: GraphData): void;
   public abstract render(): AnyShape[];
-  public abstract getBoundingBoxSize(): Size;
-  public abstract distanceToBorder(angle: number): number;
+  public getBoundingBoxSize(): Size {
+    return {
+      width: 0,
+      height: 0,
+    };
+  }
+  public distanceToBorder(angle: number): number {
+    return 0;
+  }
 }

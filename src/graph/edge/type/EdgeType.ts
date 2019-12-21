@@ -9,8 +9,12 @@ export default abstract class EdgeType {
     this.parent = parent;
   }
   public abstract updateData(data: EdgeData): void;
-  public abstract fullyUpdatePosition(): void;
-  public abstract updatePosition(): void;
+  public fullyUpdatePosition(): void {
+    // do nothing
+  }
+  public updatePosition(): void {
+    // do nothing
+  }
   public getControlPoints(): Positioned[] {
     return [];
   }

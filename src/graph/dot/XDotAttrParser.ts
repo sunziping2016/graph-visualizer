@@ -1,21 +1,8 @@
 /* tslint:disable:no-bitwise */
-export interface Pen {
-  color: [number, number, number, number];
-  fillcolor: [number, number, number, number];
-  linewidth: number;
-  fontsize: number;
-  fontname: string;
-  bold: boolean;
-  italic: boolean;
-  underline: boolean;
-  superscript: boolean;
-  subscript: boolean;
-  strikethrough: boolean;
-  overline: boolean;
-  dash: number[];
-}
 
-export enum FontCharacteristics {
+import {XdotPen, XdotShape} from '@/graph/base/dataXdot';
+
+enum FontCharacteristics {
   BOLD = 1,
   ITALIC = 2,
   UNDERLINE = 4,
@@ -24,57 +11,6 @@ export enum FontCharacteristics {
   STRIKE_THROUGH = 32,
   OVERLINE = 64,
 }
-
-interface CommonShape {
-  pen: Pen;
-}
-
-export interface TextShape extends CommonShape {
-  type: 'text';
-  x: number;
-  y: number;
-  centering: -1 | 0 | 1;
-  width: number;
-  text: string;
-}
-
-export interface EllipseShape extends CommonShape {
-  type: 'ellipse';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  filled: boolean;
-}
-
-export interface LineShape extends CommonShape {
-  type: 'line';
-  points: Array<[number, number]>;
-}
-
-export interface BezierShape extends CommonShape {
-  type: 'bezier';
-  points: Array<[number, number]>;
-  filled: boolean;
-}
-
-export interface PolygonShape extends CommonShape {
-  type: 'polygon';
-  points: Array<[number, number]>;
-  filled: boolean;
-}
-
-export interface ImageShape extends CommonShape {
-  type: 'image';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  path: string;
-}
-
-export type Shape = TextShape | EllipseShape | LineShape | BezierShape |
-  PolygonShape | ImageShape;
 
 function HSVtoRGB(h: number, s: number, v: number): [number, number, number] {
   let r = 0;
@@ -97,8 +33,8 @@ function HSVtoRGB(h: number, s: number, v: number): [number, number, number] {
 }
 
 export default class XDotAttrParser {
-  private pen: Pen;
-  private input: string;
+  private readonly pen: XdotPen;
+  private readonly input: string;
   private pos: number;
   public constructor(input: string) {
     this.pen = {
@@ -119,8 +55,8 @@ export default class XDotAttrParser {
     this.input = input;
     this.pos = 0;
   }
-  public parse(): Shape[] {
-    const shapes: Shape[] = [];
+  public parse(): XdotShape[] {
+    const shapes: XdotShape[] = [];
     while (this.pos < this.input.length) {
       const op = this.readCode();
       switch (op) {
@@ -156,11 +92,12 @@ export default class XDotAttrParser {
           const [x, y] = this.readPoint();
           const centering = this.readInt();
           if ([-1, 0, 1].indexOf(centering) === -1) {
-            throw new Error('Wrong centering paramter');
+            throw new Error('Wrong centering parameter');
           }
           const width = this.readFloat();
           const text = this.readText();
           shapes.push({
+            is: 'xdot',
             type: 'text',
             pen: Object.assign({}, this.pen),
             x, y,
@@ -184,17 +121,28 @@ export default class XDotAttrParser {
           const [x, y] = this.readPoint();
           const width = this.readFloat();
           const height = this.readFloat();
+          if (op === 'E') {
+            shapes.push({
+              is: 'xdot',
+              type: 'ellipse',
+              pen: Object.assign({}, this.pen),
+              x, y, width, height,
+              filled: true,
+            });
+          }
           shapes.push({
+            is: 'xdot',
             type: 'ellipse',
             pen: Object.assign({}, this.pen),
             x, y, width, height,
-            filled: op === 'E',
+            filled: false,
           });
           break;
         }
         case 'L': {
           const points = this.readPolygon();
           shapes.push({
+            is: 'xdot',
             type: 'line',
             pen: Object.assign({}, this.pen),
             points,
@@ -203,21 +151,41 @@ export default class XDotAttrParser {
         }
         case 'B': case 'b': {
           const points = this.readPolygon();
+          if (op === 'b') {
+            shapes.push({
+              is: 'xdot',
+              type: 'bezier',
+              pen: Object.assign({}, this.pen),
+              points: JSON.parse(JSON.stringify(points)),
+              filled: true,
+            });
+          }
           shapes.push({
+            is: 'xdot',
             type: 'bezier',
             pen: Object.assign({}, this.pen),
             points,
-            filled: op === 'b',
+            filled: false,
           });
           break;
         }
         case 'P': case 'p': {
           const points = this.readPolygon();
+          if (op === 'P') {
+            shapes.push({
+              is: 'xdot',
+              type: 'polygon',
+              pen: Object.assign({}, this.pen),
+              points: JSON.parse(JSON.stringify(points)),
+              filled: true,
+            });
+          }
           shapes.push({
+            is: 'xdot',
             type: 'polygon',
             pen: Object.assign({}, this.pen),
             points,
-            filled: op === 'P',
+            filled: false,
           });
           break;
         }
@@ -227,6 +195,7 @@ export default class XDotAttrParser {
           const height = this.readFloat();
           const path = this.readText();
           shapes.push({
+            is: 'xdot',
             type: 'image',
             pen: Object.assign({}, this.pen),
             x, y, width, height, path,
@@ -285,9 +254,9 @@ export default class XDotAttrParser {
     const c = this.readText();
     const c1 = c[0];
     if (c1 === '#') {
-      const r = parseInt(c.slice(1, 3), 16) / 255.0;
-      const g = parseInt(c.slice(3, 5), 16) / 255.0;
-      const b = parseInt(c.slice(5, 7), 16) / 255.0;
+      const r = parseInt(c.slice(1, 3), 16);
+      const g = parseInt(c.slice(3, 5), 16);
+      const b = parseInt(c.slice(5, 7), 16);
       const a = c.length >= 9 ? parseInt(c.slice(7, 9), 16) / 255.0 : 1.0;
       return [r, g, b, a];
     } else if ((c1 >= '0' && c1 <= '9') || c1 === '.') {

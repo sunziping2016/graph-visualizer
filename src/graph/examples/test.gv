@@ -1,0 +1,4 @@
+digraph hello {
+  a [style=filled, fillcolor="cornflowerblue"]
+  a -> b
+}

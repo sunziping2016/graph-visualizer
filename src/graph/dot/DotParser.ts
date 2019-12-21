@@ -1,47 +1,6 @@
 import {TokenEnum} from '@/graph/dot/DotScanner';
 import BaseParser from '@/graph/dot/BaseParser';
-import {Shape} from '@/graph/dot/XDotAttrParser';
-
-export interface DotNodeId {
-  id: string;
-  port?: string;
-  compass?: 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' | 'c' | '_';
-}
-
-export interface DotCommonElement {
-  attrs: { [attr: string]: string };
-  shapes?: { [draw: string]: Shape[] };
-}
-
-export interface DotCommonGraph extends DotCommonElement {
-  id?: string;
-  nodeAttrs: { [attr: string]: string };
-  edgeAttrs: { [attr: string]: string };
-  children: Array<DotNode | DotEdge | DotSubgraph>;
-}
-
-export interface DotGraph extends DotCommonGraph {
-  type: 'graph';
-  strict: boolean;
-  directed: boolean;
-}
-
-export interface DotSubgraph extends DotCommonGraph {
-  type: 'subgraph';
-}
-
-export interface DotNode extends DotCommonElement {
-  type: 'node';
-  id: DotNodeId;
-}
-
-export interface DotEdge extends DotCommonElement {
-  type: 'edge';
-  from: DotNodeId;
-  to: DotNodeId;
-}
-
-export type DotElement = DotGraph | DotSubgraph | DotNode | DotEdge;
+import {DotEdge, DotGraph, DotNode, DotNodeId, DotSubgraph} from '@/graph/base/dataXdot';
 
 export default class DotParser extends BaseParser<TokenEnum> {
   public constructor(lexer: Generator<[TokenEnum, string]>) {

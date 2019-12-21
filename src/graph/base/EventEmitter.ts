@@ -12,7 +12,7 @@ export default class EventEmitter {
     if (this.events[event] !== undefined) {
       const index = this.events[event].indexOf(listener);
       if (index > -1) {
-        this.events[event].splice(index, -1);
+        this.events[event].splice(index, 1);
       }
     }
   }

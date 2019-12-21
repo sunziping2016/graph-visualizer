@@ -1,8 +1,15 @@
-import {EdgeData, GraphData, NodeData, RenderableData} from '@/graph/base/dataInput';
+import {
+  EdgeData,
+  GraphData,
+  KamadaKawaiGraphLayoutData,
+  LinearComponentLayoutData,
+  NodeData,
+  RenderableData,
+} from '@/graph/base/dataInput';
 import parser from 'dotparser';
-import DotScanner, {TokenEnum} from '@/graph/dot/DotScanner';
+import DotScanner from '@/graph/dot/DotScanner';
 import DotParser from '@/graph/dot/DotParser';
-import {xdotAttrPass} from '@/graph/dot/passes';
+import {xdotAttrPass, xdotReverseY, xdotToRenderablePass} from '@/graph/dot/passes';
 
 const alnumChars: string = '0123456789' +
   'abcdefghijklmnopqrstuvwxyz' +
@@ -21,13 +28,12 @@ function generateId(): string {
 }
 
 function unescapeString(str: string): string {
-  // FIXME
-  str = str.replace('\\n', '\n');
-  str = str.replace('\\r', '\r');
-  str = str.replace('\\t', '\t');
-  str = str.replace('\\\'', '\'');
-  str = str.replace('\\\"', '\"');
-  str = str.replace('&gamma;', 'γ');
+  str = str.replace(/\\n/g, '\n');
+  str = str.replace(/\\r/g, '\r');
+  str = str.replace(/\\t/g, '\t');
+  str = str.replace(/\\'/g, '\'');
+  str = str.replace(/\\"/g, '\"');
+  str = str.replace(/&gamma;/g, 'γ');
   return str;
 }
 
@@ -120,7 +126,8 @@ export const graphParsers
         children: [],
       };
       if (config && config.preferredEdgeDirection !== undefined) {
-        result.layout!.preferredEdgeDirection = config.preferredEdgeDirection;
+        (result.layout as KamadaKawaiGraphLayoutData).preferredEdgeDirection =
+          config.preferredEdgeDirection;
       }
       if (data.id) {
         result.id = data.id;
@@ -136,13 +143,15 @@ export const graphParsers
                       result.label = attr.eq;
                       break;
                     case 'rankdir':
-                      (result.component!.direction as any) = ({
+                      (result.component as LinearComponentLayoutData)
+                        .direction = ({
                         LR: 'LR',
                         TB: 'TD',
                         RL: 'RL',
                         BT: 'DT',
-                      } as { [dir: string]: string })[attr.eq as string];
-                      result.layout!.preferredEdgeDirection = ({
+                      } as { [dir: string]: string })[attr.eq as string] as any;
+                      (result.layout as KamadaKawaiGraphLayoutData)
+                        .preferredEdgeDirection = ({
                         LR: 0,
                         TB: 90,
                         RL: 180,
@@ -209,12 +218,9 @@ export const graphParsers
     const dotParser = new DotParser(dotScanner.scan(input));
     const graph = dotParser.parse();
     xdotAttrPass(graph);
+    xdotReverseY(graph);
     // tslint:disable-next-line:no-console
-    console.log(graph);
-    return {
-      type: 'graph',
-      id: 'test',
-      shape: 'box',
-    };
+    // console.log(graph);
+    return xdotToRenderablePass(graph);
   },
 };

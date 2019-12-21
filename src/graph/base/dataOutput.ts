@@ -3,6 +3,8 @@
  * shape. And all its children (including not directly) will also be a draggable
  * shape with its id.
  */
+import {XdotShape} from '@/graph/base/dataXdot';
+
 export interface CommonShape {
   id?: string;
   draggable?: boolean;                  // default false
@@ -83,4 +85,4 @@ export interface RectWithWholeShape extends CommonShape {
 }
 
 export type AnyShape = GroupShape | RectShape | TextShape | LineShape |
-  LineQuadraticShape | PointerShape | RectWithWholeShape;
+  LineQuadraticShape | PointerShape | RectWithWholeShape | XdotShape;
