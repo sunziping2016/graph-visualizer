@@ -11,6 +11,7 @@ export default function graphTypeFactory(data: GraphData)
     case 'xdot':
       return XdotGraphType;
     default:
+      data.shape = 'box';
       return BoxGraphType;
   }
 }
