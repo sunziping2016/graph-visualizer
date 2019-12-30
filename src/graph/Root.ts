@@ -11,7 +11,8 @@ export default class Root extends EventEmitter {
   public ctx: CanvasRenderingContext2D;
   public child: (Renderable & Port) | null;
   private stepTimer: number;
-  private fixed: Port[];
+  private fixed: Set<string>;
+  private selected: Set<string>;
   public constructor() {
     super();
     this.ctx = document.createElement('canvas').getContext('2d')!;
@@ -23,7 +24,8 @@ export default class Root extends EventEmitter {
         }
       }
     }, 1000 / 60);
-    this.fixed = [];
+    this.fixed = new Set();
+    this.selected = new Set();
   }
   public findPort(id: string) {
     const idArray = id.split(':');
@@ -36,24 +38,48 @@ export default class Root extends EventEmitter {
     return null;
   }
   public setFixed(fixed: string[]) {
-    this.clearFixed();
-    this.fixed = fixed.map((id) => {
-      const port = this.findPort(id);
+    const newFixed = new Set(fixed);
+    const removed = [...this.fixed].filter((x) => !newFixed.has(x));
+    for (const item of removed) {
+      const port = this.findPort(item);
       if (port === null) {
         throw new Error('Cannot find the port');
       }
-      if (!(port instanceof Graph || port instanceof Node)) {
-        throw new Error('Wrong type of port');
-      }
-      port.fixed = true;
-      return port;
-    });
-  }
-  public clearFixed() {
-    for (const port of this.fixed) {
       port.fixed = false;
     }
-    this.fixed = [];
+    const added = [...newFixed].filter((x) => !this.fixed.has(x));
+    for (const item of added) {
+      const port = this.findPort(item);
+      if (port === null) {
+        throw new Error('Cannot find the port');
+      }
+      port.fixed = true;
+    }
+    this.fixed = newFixed;
+  }
+  public setSelected(selected: string[]) {
+    const newSelected = new Set(selected);
+    let refresh = false;
+    const removed = [...this.selected].filter((x) => !newSelected.has(x));
+    for (const item of removed) {
+      const port = this.findPort(item);
+      if (port === null) {
+        throw new Error('Cannot find the port');
+      }
+      refresh = port.onSelect(false) || refresh;
+    }
+    const added = [...newSelected].filter((x) => !this.selected.has(x));
+    for (const item of added) {
+      const port = this.findPort(item);
+      if (port === null) {
+        throw new Error('Cannot find the port');
+      }
+      refresh = port.onSelect(true) || refresh;
+    }
+    this.selected = newSelected;
+    if (refresh) {
+      this.informRender();
+    }
   }
   public movePort(id: string,
                   delta: { deltaX: number, deltaY: number }) {

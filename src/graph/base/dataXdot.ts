@@ -77,13 +77,13 @@ export interface DotNodeId {
 export interface DotCommonElement {
   shapes?: { [draw: string]: XdotShape[] };
   computedAttrs?: { [attr: string]: string };
+  boundingBox?: [number, number, number, number];
 }
 
 export interface DotCommonGraph extends DotCommonElement {
   id?: string;
   children: DotChildElement[];
   entities?: Array<DotNode | DotEdge | DotSubgraph>;
-  boundingBox?: [number, number, number, number];
 }
 
 export interface DotGraph extends DotCommonGraph {

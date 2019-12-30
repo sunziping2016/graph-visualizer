@@ -69,4 +69,7 @@ export default class Node extends Port implements Renderable {
   public distanceToBorder(angle: number) {
     return this.nodeType.distanceToBorder(angle);
   }
+  public onSelect(select: boolean): boolean {
+    return this.nodeType.onSelect(select);
+  }
 }

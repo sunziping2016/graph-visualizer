@@ -1,7 +1,6 @@
 <template>
   <div :style="{ width, height, position: 'relative' }">
     <canvas ref="hitCanvas"
-            v-if="enableHit"
             style="position: absolute; display: none"
     ></canvas>
     <canvas ref="canvas"
@@ -19,7 +18,6 @@ import {AnyShape} from '@/graph/base/dataOutput';
 export default class MyCanvas extends Vue {
   @Prop({ type: Number, required: true }) public readonly width!: number;
   @Prop({ type: Number, required: true }) public readonly height!: number;
-  @Prop(Boolean) public readonly enableHit: boolean | undefined;
   @Prop(Object) public readonly data: AnyShape | undefined;
   private context: CanvasRenderingContext2D | null = null;
   private hitContext: CanvasRenderingContext2D | null = null;
@@ -30,12 +28,10 @@ export default class MyCanvas extends Vue {
       .getContext('2d');
     (this.$refs.canvas as HTMLCanvasElement).width = this.width;
     (this.$refs.canvas as HTMLCanvasElement).height = this.height;
-    if (this.enableHit) {
-      this.hitContext = (this.$refs.hitCanvas as HTMLCanvasElement)
-        .getContext('2d');
-      (this.$refs.hitCanvas as HTMLCanvasElement).width = this.width;
-      (this.$refs.hitCanvas as HTMLCanvasElement).height = this.height;
-    }
+    this.hitContext = (this.$refs.hitCanvas as HTMLCanvasElement)
+      .getContext('2d');
+    (this.$refs.hitCanvas as HTMLCanvasElement).width = this.width;
+    (this.$refs.hitCanvas as HTMLCanvasElement).height = this.height;
   }
   @Provide()
   public generateHitColor(id: string): string {
@@ -55,17 +51,15 @@ export default class MyCanvas extends Vue {
     }
   }
   public updateCanvas() {
-    if (!this.context) {
+    if (!this.context || !this.hitContext) {
       return;
     }
     const ctx: CanvasRenderingContext2D = this.context;
-    const hitCtx = this.hitContext;
+    const hitCtx: CanvasRenderingContext2D = this.hitContext;
     ctx.clearRect(0, 0, this.width, this.height);
-    if (hitCtx) {
-      hitCtx.clearRect(0, 0, this.width, this.height);
-      this.hitColorMap = {};
-      this.hitIdMap = {};
-    }
+    hitCtx.clearRect(0, 0, this.width, this.height);
+    this.hitColorMap = {};
+    this.hitIdMap = {};
     const updateShape = (shape: AnyShape,
                          draggable: boolean,
                          draggableId: string) => {
@@ -76,11 +70,9 @@ export default class MyCanvas extends Vue {
           ctx.save();
           ctx.translate(shape.x || 0, shape.y || 0);
           ctx.scale(shape.scaleX || 1, shape.scaleY || 1);
-          if (hitCtx) {
-            hitCtx.save();
-            hitCtx.translate(shape.x || 0, shape.y || 0);
-            hitCtx.scale(shape.scaleX || 1, shape.scaleY || 1);
-          }
+          hitCtx.save();
+          hitCtx.translate(shape.x || 0, shape.y || 0);
+          hitCtx.scale(shape.scaleX || 1, shape.scaleY || 1);
           if (shape.children) {
             for (const childShape of shape.children) {
               updateShape(childShape, shape.draggable || draggable,
@@ -88,9 +80,7 @@ export default class MyCanvas extends Vue {
             }
           }
           ctx.restore();
-          if (hitCtx) {
-            hitCtx.restore();
-          }
+          hitCtx.restore();
           break;
         }
         case 'rect': {
@@ -106,7 +96,7 @@ export default class MyCanvas extends Vue {
             ctx.strokeStyle = shape.stroke;
             ctx.stroke();
           }
-          if (hitCtx && finalDraggable && finalId) {
+          if (finalDraggable && finalId) {
             const color = this.generateHitColor(finalId);
             hitCtx.beginPath();
             hitCtx.rect(shape.x || 0, shape.y || 0,
@@ -214,6 +204,15 @@ export default class MyCanvas extends Vue {
                 shape.centering === 0 ? 'center' : 'right';
               ctx.textBaseline = 'alphabetic';
               ctx.fillText(shape.text, shape.x, shape.y, shape.width);
+              if (finalDraggable && finalId) {
+                const color = this.generateHitColor(finalId);
+                hitCtx.font = `${shape.pen.fontsize}px ${shape.pen.fontname}`;
+                hitCtx.fillStyle = color;
+                hitCtx.textAlign = shape.centering === -1 ? 'left' :
+                  shape.centering === 0 ? 'center' : 'right';
+                hitCtx.textBaseline = 'alphabetic';
+                hitCtx.fillText(shape.text, shape.x, shape.y, shape.width);
+              }
               break;
             }
             case 'ellipse': {
@@ -237,6 +236,24 @@ export default class MyCanvas extends Vue {
                   shape.pen.color[3] + ')';
                 ctx.stroke();
               }
+              if (finalDraggable && finalId) {
+                const color = this.generateHitColor(finalId);
+                hitCtx.save();
+                hitCtx.translate(shape.x, shape.y);
+                hitCtx.scale(shape.width, shape.height);
+                hitCtx.beginPath();
+                hitCtx.moveTo(1.0, 0.0);
+                hitCtx.arc(0.0, 0.0, 1.0, 0, 2.0 * Math.PI);
+                hitCtx.restore();
+                hitCtx.fillStyle = color;
+                hitCtx.fill();
+                if (!shape.filled) {
+                  hitCtx.setLineDash(shape.pen.dash);
+                  hitCtx.lineWidth = shape.pen.linewidth;
+                  hitCtx.strokeStyle = color;
+                  hitCtx.stroke();
+                }
+              }
               break;
             }
             case 'line': {
@@ -253,6 +270,19 @@ export default class MyCanvas extends Vue {
                 shape.pen.color[1] + ',' + shape.pen.color[2] + ',' +
                 shape.pen.color[3] + ')';
               ctx.stroke();
+              if (finalDraggable && finalId) {
+                const color = this.generateHitColor(finalId);
+                hitCtx.beginPath();
+                hitCtx.moveTo(p0[0], p0[1]);
+                for (let i = 1; i < shape.points.length; ++i) {
+                  const p = shape.points[i];
+                  hitCtx.lineTo(p[0], p[1]);
+                }
+                hitCtx.setLineDash(shape.pen.dash);
+                hitCtx.lineWidth = shape.pen.linewidth;
+                hitCtx.strokeStyle = color;
+                hitCtx.stroke();
+              }
               break;
             }
             case 'bezier': {
@@ -276,6 +306,25 @@ export default class MyCanvas extends Vue {
                   shape.pen.color[3] + ')';
                 ctx.stroke();
               }
+              if (finalDraggable && finalId) {
+                const color = this.generateHitColor(finalId);
+                hitCtx.beginPath();
+                hitCtx.moveTo(p0[0], p0[1]);
+                for (let i = 1; i < shape.points.length; i += 3) {
+                  const [p1, p2, p3] = shape.points.slice(i, i + 3);
+                  hitCtx.bezierCurveTo(p1[0], p1[1],
+                    p2[0], p2[1], p3[0], p3[1]);
+                }
+                if (shape.filled) {
+                  hitCtx.fillStyle = color;
+                  hitCtx.fill();
+                } else {
+                  hitCtx.setLineDash(shape.pen.dash);
+                  hitCtx.lineWidth = shape.pen.linewidth;
+                  hitCtx.strokeStyle = color;
+                  hitCtx.stroke();
+                }
+              }
               break;
             }
             case 'polygon': {
@@ -298,6 +347,23 @@ export default class MyCanvas extends Vue {
                   shape.pen.color[1] + ',' + shape.pen.color[2] + ',' +
                   shape.pen.color[3] + ')';
                 ctx.stroke();
+              }
+              if (finalDraggable && finalId) {
+                const color = this.generateHitColor(finalId);
+                hitCtx.beginPath();
+                hitCtx.moveTo(p0[0], p0[1]);
+                for (const p of shape.points) {
+                  hitCtx.lineTo(p[0], p[1]);
+                }
+                hitCtx.closePath();
+                hitCtx.fillStyle = color;
+                hitCtx.fill();
+                if (!shape.filled) {
+                  hitCtx.setLineDash(shape.pen.dash);
+                  hitCtx.lineWidth = shape.pen.linewidth;
+                  hitCtx.strokeStyle = color;
+                  hitCtx.stroke();
+                }
               }
               break;
             }
@@ -328,17 +394,13 @@ export default class MyCanvas extends Vue {
   @Watch('width')
   public onWidthChanged() {
     (this.$refs.canvas as HTMLCanvasElement).width = this.width;
-    if (this.enableHit) {
-      (this.$refs.hitCanvas as HTMLCanvasElement).width = this.width;
-    }
+    (this.$refs.hitCanvas as HTMLCanvasElement).width = this.width;
     this.updateCanvas();
   }
   @Watch('height')
   public onHeightChanged() {
     (this.$refs.canvas as HTMLCanvasElement).height = this.height;
-    if (this.enableHit) {
-      (this.$refs.hitCanvas as HTMLCanvasElement).height = this.height;
-    }
+    (this.$refs.hitCanvas as HTMLCanvasElement).height = this.height;
     this.updateCanvas();
   }
   @Watch('data')

@@ -1,38 +1,6 @@
-{
-  "type": "graph",
-  "id": "hello",
-  "children": [
-    {
-      "type": "node",
-      "id": "0",
-      "label": "0",
-      "shape": "box"
-    },
-    {
-      "type": "node",
-      "id": "1",
-      "label": "1",
-      "shape": "box"
-    },
-    {
-      "type": "node",
-      "id": "2",
-      "label": "2",
-      "shape": "box"
-    },
-    {
-      "type": "edge",
-      "from": "0",
-      "to": "1",
-      "lineWidth": 5,
-      "pointerWidth": 20,
-      "pointerHeight": 30
-    },
-    {
-      "type": "edge",
-      "from": "1",
-      "to": "2",
-      "shape": "straight"
-    }
-  ]
+digraph edges {
+  0
+  1
+  2
+  0 -> 1 -> 2
 }

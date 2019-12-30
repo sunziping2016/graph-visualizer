@@ -87,20 +87,72 @@
                   {{ example.name }}
                 </span>
               </div>
-              <div class="settings-input-display"
-                   :class="{ 'settings-input-display-two-column':
-                              realSettingsWidth >= 400 }">
+              <div class="settings-input-display">
                 <div class="settings-input-raw">
                   <label for="input-raw">输入数据：</label>
                   <textarea id="input-raw" rows="10" v-model="rawInput">
                   </textarea>
                 </div>
-                <div class="settings-input-parsed">
-                  <label for="input-parsed">解析结果（只读）：</label>
-                  <textarea id="input-parsed" rows="10" readonly
-                            :value="parsedInput"
-                  ></textarea>
-                </div>
+              </div>
+            </CollapsiblePane>
+            <CollapsiblePane class="main-pane-subpane" title="设置">
+              <h4>以下设置是通用的</h4>
+              <div class="settings-settings-draggable">
+                <label for="enableDraggable">启用拖拽：</label>
+                <input type="checkbox" id="enableDraggable" checked
+                       v-model="enableDraggable">
+              </div>
+              <div class="settings-settings-highlight">
+                <label for="enable-highlight">高亮模式：</label>
+                <select id="enable-highlight" v-model="highlightMode">
+                  <option value="no" selected>不启用</option>
+                  <option value="directInput">直接输入</option>
+                  <option value="directOutput">直接输出</option>
+                  <option value="allInput">所有输入</option>
+                  <option value="allOutput">所有输出</option>
+                </select>
+              </div>
+              <h4>以下设置仅适用于Graphviz格式</h4>
+              <div class="settings-settings-layout">
+                <label for="initial-layout">初始布局：</label>
+                <select id="initial-layout" v-model="initialLayout">
+                  <option value="none">不启用</option>
+                  <option value="KamadaKawai" selected>KamadaKawai</option>
+                </select>
+              </div>
+              <div class="settings-settings-physics">
+                <label for="physics-layout">物理布局：</label>
+                <select id="physics-layout" v-model="physicsLayout">
+                  <option value="none">不启用</option>
+                  <option value="BarnesHut" selected>默认</option>
+                </select>
+              </div>
+              <div class="settings-settings-component">
+                <label for="component-layout">连通分量布局：</label>
+                <select id="component-layout" v-model="componentLayout">
+                  <option value="default" selected>默认</option>
+                  <option value="linearLR">自左至右</option>
+                  <option value="linearRL">自右至左</option>
+                  <option value="linearTD">自上至下</option>
+                  <option value="linearDT">自下至上</option>
+                </select>
+              </div>
+              <div class="settings-settings-direction">
+                <label for="preferred-direction">大体方向</label>
+                <select id="preferred-direction" v-model="preferredDirection">
+                  <option value="default">默认</option>
+                  <option value="left">向左</option>
+                  <option value="right" selected>向右</option>
+                  <option value="top">向上</option>
+                  <option value="down">向下</option>
+                </select>
+              </div>
+              <div class="settings-settings-edge-type">
+                <label for="edge-type">边的形状：</label>
+                <select id="edge-type" v-model="edgeShape">
+                  <option value="straight">直线</option>
+                  <option value="quadratic" selected>二次</option>
+                </select>
               </div>
             </CollapsiblePane>
           </div>
@@ -118,7 +170,7 @@ import 'vue-awesome/icons/upload';
 import 'vue-awesome/icons/sync';
 import {throttle} from 'lodash-es';
 import {globalGraphRoot} from '@/graph/Root';
-import {graphParsers} from '@/graph/parser';
+import {GraphParserConfig, graphParsers} from '@/graph/parser';
 import {graphExamples} from './graph/examples';
 import {Debounce} from '@/debounce-decorator';
 import {AnyShape} from '@/graph/base/dataOutput';
@@ -153,16 +205,41 @@ export default class App extends Vue {
   private rawInput = '';
   private parseError = null;
   private parsedInput = '';
+  // Settings data
+  private enableDraggable = true;
+  private highlightMode = 'no';
+  private initialLayout = 'KamadaKawai';
+  private physicsLayout = 'BarnesHut';
+  private componentLayout = 'default';
+  private preferredDirection = 'right';
+  private edgeShape = 'quadratic';
   // noinspection JSUnusedLocalSymbols
   private examples = graphExamples;
   // Rendered data
   // noinspection JSMismatchedCollectionQueryUpdate
   private rendered: AnyShape[] = [];
+  get parserConfig(): GraphParserConfig {
+    const preferredEdgeDirection = ({
+      default: 'any',
+      left: 180,
+      right: 0,
+      top: -90,
+      down: 90,
+    } as any)[this.preferredDirection];
+    return {
+      initialLayout: this.initialLayout as any,
+      physicsLayout: this.physicsLayout as any,
+      componentLayout: this.componentLayout as any,
+      preferredEdgeDirection,
+      edgeType: this.edgeShape as any,
+    };
+  }
   @Debounce(10000 / 60)
   public parseInput() {
     try {
       if (this.rawInput) {
-        const parsed = graphParsers[this.parser](this.rawInput);
+        const parsed = graphParsers[this.parser](
+          this.rawInput, this.parserConfig);
         this.parsedInput = JSON.stringify(parsed, null, 2);
         globalGraphRoot.updateData(parsed);
       } else {
@@ -203,11 +280,28 @@ export default class App extends Vue {
   }
   @Watch('parser')
   public onParserChanged() {
+    switch (this.parser) {
+      case 'graphviz':
+      case 'json':
+        this.enableDraggable = true;
+        break;
+      default:
+        this.enableDraggable = false;
+        break;
+    }
     this.parseInput();
   }
   @Watch('rawInput')
   public onRawInputChanged() {
     this.parseInput();
+  }
+  @Watch('parserConfig')
+  public onParseConfigChanged() {
+    this.parseInput();
+  }
+  @Watch('enableDraggable')
+  public onEnableDraggableChanged() {
+    (this.$refs.graph as any).enableDraggable = this.enableDraggable;
   }
   public redraw() {
     if (this.parsedInput) {
@@ -309,6 +403,8 @@ export default class App extends Vue {
 // Settings Layout
 .main-pane-settings
   color lighten($textColor, 10%)
+  h4
+    margin .2rem 0
   label
     margin .2rem 0
     padding .2rem
@@ -352,12 +448,6 @@ export default class App extends Vue {
   .settings-input-format
     display inline-block
     margin-right .5rem
-  .settings-input-display
-    &-two-column
-      display flex
-      justify-content space-between
-      .settings-input-raw, .settings-input-parsed
-        width calc(50% - .3rem)
   .setting-input-redraw
     display inline-block
     font-size .9rem

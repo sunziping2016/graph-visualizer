@@ -17,6 +17,7 @@ import {
   xdotMovePass,
 } from '@/graph/dot/passes';
 import {DotGraph, DotNode, DotSubgraph} from '@/graph/base/dataXdot';
+import {globalGraphRoot} from '@/graph/Root';
 
 const alnumChars: string = '0123456789' +
   'abcdefghijklmnopqrstuvwxyz' +
@@ -54,6 +55,11 @@ function normalizeColor(color: string): string {
 
 export interface GraphParserConfig {
   preferredEdgeDirection?: number | 'any';
+  edgeType?: 'straight' | 'quadratic';
+  initialLayout?: 'none' | 'kamadaKawai';
+  physicsLayout?: 'none' | 'BarnesHut';
+  componentLayout?: 'default' | 'linearLR' | 'linearRL'
+    | 'linearTD' | 'linearDT';
 }
 
 export const graphParsers
@@ -110,19 +116,17 @@ export const graphParsers
           type: 'linear',
           direction: 'TD',
         },
-        layout: {
+        layout: config && config.initialLayout === 'none' ? {
+          type: 'none',
+        } : {
           type: 'KamadaKawai',
           preferredEdgeDirection: 90,
         },
         physics: {
-          type: 'BarnesHut',
+          type: (config && config.physicsLayout) || 'BarnesHut',
         },
         children: [],
       };
-      if (config && config.preferredEdgeDirection !== undefined) {
-        (result.layout as KamadaKawaiGraphLayoutData).preferredEdgeDirection =
-          config.preferredEdgeDirection;
-      }
       if (data.id) {
         result.id = data.id;
       }
@@ -132,21 +136,23 @@ export const graphParsers
         }
         if (data.computedAttrs.rankdir !== undefined) {
           const rankdir = data.computedAttrs.rankdir;
-          (result.component as LinearComponentLayoutData)
-            .direction = ({
-            LR: 'TD',
-            TB: 'LR',
-            RL: 'TD',
-            BT: 'LR',
-          } as { [dir: string]: string })[rankdir as string] as any;
-          (result.layout as KamadaKawaiGraphLayoutData)
-            .preferredEdgeDirection = ({
-            LR: 0,
-            TB: 90,
-            RL: 180,
-            BT: 279,
-          } as { [dir: string]: number })[rankdir as string];
-          recordHorizontal = !(rankdir === 'LR' || rankdir === 'RL');
+          if (result.component && result.component.type === 'linear') {
+            result.component.direction = ({
+              LR: 'TD',
+              TB: 'LR',
+              RL: 'TD',
+              BT: 'LR',
+            } as { [dir: string]: string })[rankdir as string] as any;
+          }
+          if (result.layout && result.layout.type === 'KamadaKawai') {
+            result.layout.preferredEdgeDirection = ({
+              LR: 0,
+              TB: 90,
+              RL: 180,
+              BT: 279,
+            } as { [dir: string]: number })[rankdir as string];
+            recordHorizontal = !(rankdir === 'LR' || rankdir === 'RL');
+          }
         }
         if (data.id && data.id.startsWith('cluster')) {
           if (data.computedAttrs.style !== undefined) {
@@ -160,6 +166,23 @@ export const graphParsers
               data.computedAttrs.fillcolor as any);
           }
         }
+      }
+      if (config && config.preferredEdgeDirection !== undefined &&
+        result.layout && result.layout.type === 'KamadaKawai') {
+        result.layout.preferredEdgeDirection =
+          config.preferredEdgeDirection;
+      }
+
+      if (config && config.componentLayout !== undefined &&
+        config.componentLayout !== 'default' &&
+        result.component && result.component.type === 'linear') {
+        (result.component as LinearComponentLayoutData)
+          .direction = ({
+          linearLR: 'LR',
+          linearRL: 'RL',
+          linearTD: 'TD',
+          linearDT: 'DT',
+        } as any)[config.componentLayout];
       }
       if (data.entities) {
         for (const child of data.entities) {
@@ -176,14 +199,13 @@ export const graphParsers
             case 'edge': {
               const element: EdgeData = {
                 type: 'edge',
-                shape: 'quadratic',
+                shape: (config && config.edgeType) || 'quadratic',
                 id: generateId(),
                 from: child.from.id + (child.from.port ?
                   ':' + child.from.port : ''),
                 to: child.to.id + (child.to.port ?
                   ':' + child.to.port : ''),
               };
-              // TODO: edge attributes
               result.children!.push(element);
               break;
             }
@@ -205,7 +227,7 @@ export const graphParsers
     const graph = dotParser.parse();
     xdotComputedAttrPass(graph);
     xdotShapeAttrPass(graph);
-    xdotBoundingBoxPass(graph);
+    xdotBoundingBoxPass(graph, globalGraphRoot.ctx);
     xdotReverseY(graph);
     if (graph.boundingBox) {
       const deltaX = -0.5 * (graph.boundingBox[0] + graph.boundingBox[2]);

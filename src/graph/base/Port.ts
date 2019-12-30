@@ -20,4 +20,12 @@ export default abstract class Port extends Positioned {
   }
   public abstract getBoundingBoxSize(): Size;
   public abstract distanceToBorder(angle: number): number;
+  // Return true to trigger a refresh
+  public onHover(hover: boolean): boolean {
+    return false;
+  }
+  // Return true to trigger a refresh
+  public onSelect(select: boolean): boolean {
+    return false;
+  }
 }

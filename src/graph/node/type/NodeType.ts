@@ -22,4 +22,7 @@ export default abstract class NodeType {
   public distanceToBorder(angle: number): number {
     return 0;
   }
+  public onSelect(select: boolean): boolean {
+    return false;
+  }
 }

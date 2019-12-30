@@ -86,6 +86,7 @@ export interface XdotNodeData extends CommonNodeData {
   xdotId: DotNodeId;
   attrs: { [attr: string]: string };
   shapes?: { [draw: string]: XdotShape[] };
+  boundingBox?: [number, number, number, number];
 }
 
 export type NodeData = BoxNodeData | RecordNodeData | TableNodeData | XdotNodeData;

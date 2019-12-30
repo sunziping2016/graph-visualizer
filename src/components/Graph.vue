@@ -1,9 +1,11 @@
 <template>
   <div class="graph-container">
     <my-canvas ref="mainCanvas" :width="width" :height="height"
-               :data="mainCanvasData" :enable-hit="true"
-               @mousedown="mousedown" @wheel="wheel"
-               v-on="mouseDragActive ? { mouseup, mousemove } : {}"
+               :data="mainCanvasData"
+               @mousedown="mousedown"
+               @mouseup="mouseup"
+               @mousemove="mousemove"
+               @wheel="wheel"
     ></my-canvas>
     <div class="thumbnail" :style="{
       width: thumbnailWidth + 'px',
@@ -11,7 +13,7 @@
     }">
       <my-canvas ref="thumbnailCanvas"
                  :width="thumbnailWidth" :height="thumbnailHeight"
-                 :data="thumbnailCanvasData" :enable-hit="true"
+                 :data="thumbnailCanvasData"
                  @mousedown="thumbnailMousedown"
                  v-on="thumbnailMouseDragActive ? {
                    mouseup: thumbnailMouseup,
@@ -56,6 +58,7 @@ export default class Graph extends Vue {
     x: 0,
     y: 0,
   };
+  private enableDraggable = true;
   get stageX() {
     return this.width / 2 + this.x;
   }
@@ -189,18 +192,27 @@ export default class Graph extends Vue {
     const pos = this.translateMouseEvent(e);
     const id = (this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y);
     if (id) {
-      this.draggedId = id;
-      globalGraphRoot.setFixed([id]);
+      if (this.enableDraggable) {
+        this.draggedId = id;
+        globalGraphRoot.setFixed([id]);
+      }
+      globalGraphRoot.setSelected([id]);
+    } else {
+      globalGraphRoot.setSelected([]);
     }
   }
   public mouseup() {
     this.mouseDragActive = false;
     this.draggedId = null;
-    globalGraphRoot.clearFixed();
+    globalGraphRoot.setFixed([]);
   }
   public mousemove(e: MouseEvent) {
     if (e.buttons === 0) {
       this.mouseDragActive = false;
+      const pos = this.translateMouseEvent(e);
+      const id = (this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y);
+      // tslint:disable-next-line:no-console
+      // console.log(id);
     }
     if (this.mouseDragActive || this.draggedId) {
       const newCoords = {
