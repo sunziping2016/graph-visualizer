@@ -3,7 +3,6 @@ import GraphLayout, {LayoutData} from '@/graph/graph/layout/GraphLayout';
 import {KamadaKawaiGraphLayoutData, Size} from '@/graph/base/dataInput';
 import Port from '@/graph/base/Port';
 import Positioned from '@/graph/base/Positioned';
-import {AnyShape} from '@/graph/base/dataOutput';
 
 interface KamadaKawaiGraphLayoutConfig {
   springLength: number;

@@ -76,23 +76,23 @@ export const graphParsers
         label: data.id.id,
       };
       if (data.id) {
-        result.id = data.id.id;
+        result.id = unescapeString(data.id.id);
       }
       if (data.computedAttrs) {
-        if (data.computedAttrs.label) {
-          result.label = data.computedAttrs.label;
+        if (data.computedAttrs.label !== undefined) {
+          result.label = unescapeString(data.computedAttrs.label);
         }
-        if (data.computedAttrs.style) {
+        if (data.computedAttrs.style !== undefined) {
           result.style = data.computedAttrs.style as any;
         }
-        if (data.computedAttrs.color) {
+        if (data.computedAttrs.color !== undefined) {
           result.strokeColor = normalizeColor(data.computedAttrs.color as any);
         }
-        if (data.computedAttrs.fillcolor) {
+        if (data.computedAttrs.fillcolor !== undefined) {
           result.fillColor = normalizeColor(
             data.computedAttrs.fillcolor as any);
         }
-        if (data.computedAttrs.shape) {
+        if (data.computedAttrs.shape !== undefined) {
           const shape = data.computedAttrs.shape as any;
           result.shape = shape === 'none' ? 'table' : shape;
         }
@@ -127,17 +127,17 @@ export const graphParsers
         result.id = data.id;
       }
       if (data.computedAttrs) {
-        if (data.computedAttrs.label) {
-          result.label = data.computedAttrs.label;
+        if (data.computedAttrs.label !== undefined) {
+          result.label = unescapeString(data.computedAttrs.label);
         }
-        if (data.computedAttrs.rankdir) {
+        if (data.computedAttrs.rankdir !== undefined) {
           const rankdir = data.computedAttrs.rankdir;
           (result.component as LinearComponentLayoutData)
             .direction = ({
-            LR: 'LR',
-            TB: 'TD',
-            RL: 'RL',
-            BT: 'DT',
+            LR: 'TD',
+            TB: 'LR',
+            RL: 'TD',
+            BT: 'LR',
           } as { [dir: string]: string })[rankdir as string] as any;
           (result.layout as KamadaKawaiGraphLayoutData)
             .preferredEdgeDirection = ({
@@ -149,13 +149,13 @@ export const graphParsers
           recordHorizontal = !(rankdir === 'LR' || rankdir === 'RL');
         }
         if (data.id && data.id.startsWith('cluster')) {
-          if (data.computedAttrs.style) {
+          if (data.computedAttrs.style !== undefined) {
             result.style = data.computedAttrs.style as any;
           }
-          if (data.computedAttrs.color) {
+          if (data.computedAttrs.color !== undefined) {
             result.strokeColor = normalizeColor(data.computedAttrs.color as any);
           }
-          if (data.computedAttrs.fillcolor) {
+          if (data.computedAttrs.fillcolor !== undefined) {
             result.fillColor = normalizeColor(
               data.computedAttrs.fillcolor as any);
           }
