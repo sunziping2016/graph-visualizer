@@ -4,8 +4,8 @@ import {GraphLayoutData, Size} from '@/graph/base/dataInput';
 import Port from '@/graph/base/Port';
 import Edge from '@/graph/edge/Edge';
 import Renderable from '@/graph/base/Renderable';
-import {AnyShape} from '@/graph/base/dataOutput';
 import Node from '@/graph/node/Node';
+import {AnyShape} from '@/graph/base/dataOutput';
 
 export interface LayoutEdgeData {
   from: Port;
@@ -24,7 +24,7 @@ export interface LayoutData {
 export default abstract class GraphLayout extends Positioned {
   protected readonly graph: Graph;
   protected data: LayoutData;
-  protected constructor(graph: Graph, parent: Positioned | null) {
+  public constructor(graph: Graph, parent: Positioned | null) {
     super(parent);
     this.graph = graph;
     this.data = {
@@ -45,6 +45,18 @@ export default abstract class GraphLayout extends Positioned {
       }
     }
   }
-  public abstract render(): AnyShape;
-  public abstract getContentSize(): Size;
+  public render(): AnyShape {
+    return {
+      is: 'group',
+      x: this.position.x,
+      y: this.position.y,
+      children: this.data.children.map((x) => x.render()),
+    };
+  }
+  public getContentSize(): Size {
+    return {
+      width: 0,
+      height: 0,
+    };
+  }
 }

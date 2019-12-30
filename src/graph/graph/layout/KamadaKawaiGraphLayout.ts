@@ -262,14 +262,7 @@ export default class KamadaKawaiGraphLayout extends GraphLayout {
     }
     this.informAllEdgesFullyUpdatePosition();
   } // solve method
-  public render(): AnyShape {
-    return {
-      is: 'group',
-      x: this.position.x,
-      y: this.position.y,
-      children: this.data.children.map((x) => x.render()),
-    };
-  }
+
   public getContentSize() {
     return this.contentSize;
   }

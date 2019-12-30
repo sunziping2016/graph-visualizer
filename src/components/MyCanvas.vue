@@ -203,11 +203,118 @@ export default class MyCanvas extends Vue {
           ctx.fill();
           break;
         }
+        case 'xdot': {
+          switch (shape.type) {
+            case 'text': {
+              ctx.font = `${shape.pen.fontsize}px ${shape.pen.fontname}`;
+              ctx.fillStyle = 'rgba(' + shape.pen.color[0] + ',' +
+                shape.pen.color[1] + ',' + shape.pen.color[2] + ',' +
+                shape.pen.color[3] + ')';
+              ctx.textAlign = shape.centering === -1 ? 'left' :
+                shape.centering === 0 ? 'center' : 'right';
+              ctx.textBaseline = 'alphabetic';
+              ctx.fillText(shape.text, shape.x, shape.y, shape.width);
+              break;
+            }
+            case 'ellipse': {
+              ctx.save();
+              ctx.translate(shape.x, shape.y);
+              ctx.scale(shape.width, shape.height);
+              ctx.beginPath();
+              ctx.moveTo(1.0, 0.0);
+              ctx.arc(0.0, 0.0, 1.0, 0, 2.0 * Math.PI);
+              ctx.restore();
+              if (shape.filled) {
+                ctx.fillStyle = 'rgba(' + shape.pen.fillcolor[0] + ',' +
+                  shape.pen.fillcolor[1] + ',' + shape.pen.fillcolor[2] + ',' +
+                  shape.pen.fillcolor[3] + ')';
+                ctx.fill();
+              } else {
+                ctx.setLineDash(shape.pen.dash);
+                ctx.lineWidth = shape.pen.linewidth;
+                ctx.strokeStyle = 'rgba(' + shape.pen.color[0] + ',' +
+                  shape.pen.color[1] + ',' + shape.pen.color[2] + ',' +
+                  shape.pen.color[3] + ')';
+                ctx.stroke();
+              }
+              break;
+            }
+            case 'line': {
+              ctx.beginPath();
+              const p0 = shape.points[0];
+              ctx.moveTo(p0[0], p0[1]);
+              for (let i = 1; i < shape.points.length; ++i) {
+                const p = shape.points[i];
+                ctx.lineTo(p[0], p[1]);
+              }
+              ctx.setLineDash(shape.pen.dash);
+              ctx.lineWidth = shape.pen.linewidth;
+              ctx.strokeStyle = 'rgba(' + shape.pen.color[0] + ',' +
+                shape.pen.color[1] + ',' + shape.pen.color[2] + ',' +
+                shape.pen.color[3] + ')';
+              ctx.stroke();
+              break;
+            }
+            case 'bezier': {
+              ctx.beginPath();
+              const p0 = shape.points[0];
+              ctx.moveTo(p0[0], p0[1]);
+              for (let i = 1; i < shape.points.length; i += 3) {
+                const [p1, p2, p3] = shape.points.slice(i, i + 3);
+                ctx.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+              }
+              if (shape.filled) {
+                ctx.fillStyle = 'rgba(' + shape.pen.fillcolor[0] + ',' +
+                  shape.pen.fillcolor[1] + ',' + shape.pen.fillcolor[2] + ',' +
+                  shape.pen.fillcolor[3] + ')';
+                ctx.fill();
+              } else {
+                ctx.setLineDash(shape.pen.dash);
+                ctx.lineWidth = shape.pen.linewidth;
+                ctx.strokeStyle = 'rgba(' + shape.pen.color[0] + ',' +
+                  shape.pen.color[1] + ',' + shape.pen.color[2] + ',' +
+                  shape.pen.color[3] + ')';
+                ctx.stroke();
+              }
+              break;
+            }
+            case 'polygon': {
+              ctx.beginPath();
+              const p0 = shape.points[shape.points.length - 1];
+              ctx.moveTo(p0[0], p0[1]);
+              for (const p of shape.points) {
+                ctx.lineTo(p[0], p[1]);
+              }
+              ctx.closePath();
+              if (shape.filled) {
+                ctx.fillStyle = 'rgba(' + shape.pen.fillcolor[0] + ',' +
+                  shape.pen.fillcolor[1] + ',' + shape.pen.fillcolor[2] + ',' +
+                  shape.pen.fillcolor[3] + ')';
+                ctx.fill();
+              } else {
+                ctx.setLineDash(shape.pen.dash);
+                ctx.lineWidth = shape.pen.linewidth;
+                ctx.strokeStyle = 'rgba(' + shape.pen.color[0] + ',' +
+                  shape.pen.color[1] + ',' + shape.pen.color[2] + ',' +
+                  shape.pen.color[3] + ')';
+                ctx.stroke();
+              }
+              break;
+            }
+            case 'image':
+              throw new Error('Image is not supported');
+            default:
+              throw new Error('Unknown type of xdot shape');
+          }
+          break;
+        }
         default:
-          throw new Error(`Unknown shape`);
+          throw new Error('Unknown shape');
       }
     };
     if (this.data) {
+      ctx.lineCap = 'butt';
+      ctx.lineJoin = 'miter';
       updateShape(this.data, false, '');
     }
   }

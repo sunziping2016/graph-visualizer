@@ -6,6 +6,7 @@ import Port from '@/graph/base/Port';
 import Graph from '@/graph/graph/Graph';
 import Node from '@/graph/node/Node';
 
+
 export default class Root extends EventEmitter {
   public ctx: CanvasRenderingContext2D;
   public child: (Renderable & Port) | null;

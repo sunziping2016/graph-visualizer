@@ -1,3 +1,5 @@
+import {DotNodeId, XdotShape} from '@/graph/base/dataXdot';
+
 export interface CommonNodeData {
   type: 'node';
   id: string;
@@ -79,7 +81,14 @@ export interface TableNodeData extends CommonNodeData {
   lineHeight?: number;                  // default 1.2
 }
 
-export type NodeData = BoxNodeData | RecordNodeData | TableNodeData;
+export interface XdotNodeData extends CommonNodeData {
+  shape: 'xdot';
+  xdotId: DotNodeId;
+  attrs: { [attr: string]: string };
+  shapes?: { [draw: string]: XdotShape[] };
+}
+
+export type NodeData = BoxNodeData | RecordNodeData | TableNodeData | XdotNodeData;
 
 /*
  * `from` and `to` are the `:` separated id string. Lookup starts from root.
@@ -111,7 +120,15 @@ export interface QuadraticEdgeData extends CommonLineEdgeData {
   shape: 'quadratic';
 }
 
-export type EdgeData = StraightEdgeData | QuadraticEdgeData;
+export interface XdotEdgeData extends CommonEdgeData {
+  shape: 'xdot';
+  xdotFrom: DotNodeId;
+  xdotTo: DotNodeId;
+  attrs: { [attr: string]: string };
+  shapes?: { [draw: string]: XdotShape[] };
+}
+
+export type EdgeData = StraightEdgeData | QuadraticEdgeData | XdotEdgeData;
 
 export interface KamadaKawaiGraphLayoutData {
   type: 'KamadaKawai';
@@ -120,7 +137,11 @@ export interface KamadaKawaiGraphLayoutData {
   preferredEdgeDirection?: number | 'any'; // angle in degree, default 'any'
 }
 
-export type GraphLayoutData = KamadaKawaiGraphLayoutData;
+export interface NoneGraphLayoutData {
+  type: 'none';
+}
+
+export type GraphLayoutData = KamadaKawaiGraphLayoutData | NoneGraphLayoutData;
 
 export interface BarnesHutGraphPhysicsData {
   type: 'BarnesHut';
@@ -133,7 +154,11 @@ export interface BarnesHutGraphPhysicsData {
   maxVelocity?: number;                  // default 50
 }
 
-export type GraphPhysicsData = BarnesHutGraphPhysicsData;
+export interface NoneGraphPhysicsData {
+  type: 'none';
+}
+
+export type GraphPhysicsData = BarnesHutGraphPhysicsData | NoneGraphPhysicsData;
 
 export interface LinearComponentLayoutData {
   type: 'linear';
@@ -142,11 +167,18 @@ export interface LinearComponentLayoutData {
   spaceBetween?: number;                 // default 12
 }
 
-export type ComponentLayoutData = LinearComponentLayoutData;
+export interface NoneComponentLayoutData {
+  type: 'none';
+}
+
+export type ComponentLayoutData = LinearComponentLayoutData |
+  NoneComponentLayoutData;
 
 export interface CommonGraphData {
   type: 'graph';
   id: string;
+  strict?: boolean;
+  directed?: boolean;
   children?: RenderableData[];
   layout?: GraphLayoutData;
   physics?: GraphPhysicsData;
@@ -170,7 +202,14 @@ export interface BoxGraphData extends CommonGraphData {
                                         // content
 }
 
-export type GraphData = BoxGraphData;
+export interface XdotGraphData extends CommonGraphData {
+  shape: 'xdot';
+  attrs: { [attr: string]: string };
+  shapes?: { [draw: string]: XdotShape[] };
+  boundingBox?: [number, number, number, number];
+}
+
+export type GraphData = BoxGraphData | XdotGraphData;
 
 export type RenderableData = GraphData | NodeData | EdgeData;
 

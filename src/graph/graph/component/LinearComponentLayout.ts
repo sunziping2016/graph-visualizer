@@ -64,14 +64,6 @@ export default class LinearComponentLayout extends ComponentLayout {
       }
     } // position calculation
   }
-  public render(): AnyShape {
-    return {
-      is: 'group',
-      x: this.position.x,
-      y: this.position.y,
-      children: this.graph.layouts.map((x) => x.render()),
-    };
-  }
   public getContentSize() {
     return this.contentSize;
   }
