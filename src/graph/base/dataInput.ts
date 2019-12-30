@@ -205,8 +205,6 @@ export interface BoxGraphData extends CommonGraphData {
 export interface XdotGraphData extends CommonGraphData {
   shape: 'xdot';
   attrs: { [attr: string]: string };
-  nodeAttrs: { [attr: string]: string };
-  edgeAttrs: { [attr: string]: string };
   shapes?: { [draw: string]: XdotShape[] };
 }
 

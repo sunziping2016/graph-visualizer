@@ -75,15 +75,14 @@ export interface DotNodeId {
 }
 
 export interface DotCommonElement {
-  attrs: { [attr: string]: string };
   shapes?: { [draw: string]: XdotShape[] };
+  computedAttrs?: { [attr: string]: string };
 }
 
 export interface DotCommonGraph extends DotCommonElement {
   id?: string;
-  nodeAttrs: { [attr: string]: string };
-  edgeAttrs: { [attr: string]: string };
-  children: Array<DotNode | DotEdge | DotSubgraph>;
+  children: DotChildElement[];
+  entities?: Array<DotNode | DotEdge | DotSubgraph>;
 }
 
 export interface DotGraph extends DotCommonGraph {
@@ -99,12 +98,32 @@ export interface DotSubgraph extends DotCommonGraph {
 export interface DotNode extends DotCommonElement {
   type: 'node';
   id: DotNodeId;
+  attrs: { [attr: string]: string };
 }
 
 export interface DotEdge extends DotCommonElement {
   type: 'edge';
   from: DotNodeId;
   to: DotNodeId;
+  attrs: { [attr: string]: string };
 }
 
-export type DotElement = DotGraph | DotSubgraph | DotNode | DotEdge;
+export interface DotGraphAttr {
+  type: 'graphAttr';
+  attrs: { [attr: string]: string };
+}
+
+export interface DotNodeAttr {
+  type: 'nodeAttr';
+  attrs: { [attr: string]: string };
+}
+
+export interface DotEdgeAttr {
+  type: 'edgeAttr';
+  attrs: { [attr: string]: string };
+}
+
+export type DotChildElement = DotNode | DotEdge | DotSubgraph |
+  DotGraphAttr | DotNodeAttr | DotEdgeAttr;
+
+export type DotElement = DotGraph | DotNode | DotEdge | DotSubgraph;

@@ -6,10 +6,10 @@ import {
   NodeData,
   RenderableData,
 } from '@/graph/base/dataInput';
-import parser from 'dotparser';
 import DotScanner from '@/graph/dot/DotScanner';
 import DotParser from '@/graph/dot/DotParser';
-import {xdotAttrPass, xdotReverseY, xdotToRenderablePass} from '@/graph/dot/passes';
+import {xdotShapeAttrPass, xdotReverseY, xdotToRenderablePass, xdotComputedAttrPass} from '@/graph/dot/passes';
+import {DotGraph, DotNode, DotSubgraph} from '@/graph/base/dataXdot';
 
 const alnumChars: string = '0123456789' +
   'abcdefghijklmnopqrstuvwxyz' +
@@ -56,57 +56,46 @@ export const graphParsers
     return JSON.parse(input);
   },
   graphviz(input: string, config?: GraphParserConfig): RenderableData {
-    const ast = parser(input);
-    if (!ast[0]) {
-      throw new Error('Expect one root element');
-    }
-    // const directed = ast[0].type === 'digraph';
-    function parseNode(data: any): NodeData {
+    const dotScanner = new DotScanner();
+    const dotParser = new DotParser(dotScanner.scan(input));
+    const graph = dotParser.parse();
+    xdotComputedAttrPass(graph);
+    // tslint:disable-next-line:no-console
+    console.log(graph);
+
+    function parseNode(data: DotNode): NodeData {
       const result: NodeData = {
         type: 'node',
         shape: 'box',
         id: generateId(),
+        label: data.id.id,
       };
-      if (data.node_id) {
-        result.id = data.node_id.id;
+      if (data.id) {
+        result.id = data.id.id;
       }
-      if (data.attr_list) {
-        for (const attr of data.attr_list) {
-          switch (attr.id) {
-            case 'label':
-              // noinspection SuspiciousTypeOfGuard
-              if (typeof attr.eq === 'string') {
-                result.label = unescapeString(attr.eq);
-              } else {
-                result.label = unescapeString(attr.eq.value);
-              }
-              break;
-            case 'style':
-              result.style = attr.eq;
-              break;
-            case 'color':
-              result.strokeColor = normalizeColor(attr.eq);
-              break;
-            case 'fillcolor':
-              result.fillColor = normalizeColor(attr.eq);
-              break;
-            case 'shape':
-              result.shape = attr.eq === 'none' ? 'table' : attr.eq;
-              break;
-            case 'height':
-              // ignore
-              break;
-            case 'width':
-              // ignore
-              break;
-            default:
-              throw new Error(`Unknown node attribute ${attr.id}`);
-          }
+      if (data.computedAttrs) {
+        if (data.computedAttrs.label) {
+          result.label = data.computedAttrs.label;
+        }
+        if (data.computedAttrs.style) {
+          result.style = data.computedAttrs.style as any;
+        }
+        if (data.computedAttrs.color) {
+          result.strokeColor = normalizeColor(data.computedAttrs.color as any);
+        }
+        if (data.computedAttrs.fillcolor) {
+          result.fillColor = normalizeColor(
+            data.computedAttrs.fillcolor as any);
+        }
+        if (data.computedAttrs.shape) {
+          const shape = data.computedAttrs.shape as any;
+          result.shape = shape === 'none' ? 'table' : shape;
         }
       }
       return result;
     }
-    function parseGraph(data: any): GraphData {
+
+    function parseGraph(data: DotGraph | DotSubgraph): GraphData {
       let recordHorizontal = true;
       const result: GraphData = {
         type: 'graph',
@@ -132,50 +121,45 @@ export const graphParsers
       if (data.id) {
         result.id = data.id;
       }
-      if (data.children) {
-        for (const child of data.children) {
+      if (data.computedAttrs) {
+        if (data.computedAttrs.label) {
+          result.label = data.computedAttrs.label;
+        }
+        if (data.computedAttrs.rankdir) {
+          const rankdir = data.computedAttrs.rankdir;
+          (result.component as LinearComponentLayoutData)
+            .direction = ({
+            LR: 'LR',
+            TB: 'TD',
+            RL: 'RL',
+            BT: 'DT',
+          } as { [dir: string]: string })[rankdir as string] as any;
+          (result.layout as KamadaKawaiGraphLayoutData)
+            .preferredEdgeDirection = ({
+            LR: 0,
+            TB: 90,
+            RL: 180,
+            BT: 279,
+          } as { [dir: string]: number })[rankdir as string];
+          recordHorizontal = !(rankdir === 'LR' || rankdir === 'RL');
+        }
+        if (data.id && data.id.startsWith('cluster')) {
+          if (data.computedAttrs.style) {
+            result.style = data.computedAttrs.style as any;
+          }
+          if (data.computedAttrs.color) {
+            result.strokeColor = normalizeColor(data.computedAttrs.color as any);
+          }
+          if (data.computedAttrs.fillcolor) {
+            result.fillColor = normalizeColor(
+              data.computedAttrs.fillcolor as any);
+          }
+        }
+      }
+      if (data.entities) {
+        for (const child of data.entities) {
           switch (child.type) {
-            case 'attr_stmt':
-              if (child.attr_list) {
-                for (const attr of child.attr_list) {
-                  switch (attr.id) {
-                    case 'label':
-                      result.label = attr.eq;
-                      break;
-                    case 'rankdir':
-                      (result.component as LinearComponentLayoutData)
-                        .direction = ({
-                        LR: 'LR',
-                        TB: 'TD',
-                        RL: 'RL',
-                        BT: 'DT',
-                      } as { [dir: string]: string })[attr.eq as string] as any;
-                      (result.layout as KamadaKawaiGraphLayoutData)
-                        .preferredEdgeDirection = ({
-                        LR: 0,
-                        TB: 90,
-                        RL: 180,
-                        BT: 279,
-                      } as { [dir: string]: number })[attr.eq as string];
-                      recordHorizontal = !(attr.eq === 'LR' ||
-                        attr.eq === 'RL');
-                      break;
-                    case 'style':
-                      result.style = attr.eq;
-                      break;
-                    case 'color':
-                      result.strokeColor = normalizeColor(attr.eq);
-                      break;
-                    case 'fillcolor':
-                      result.fillColor = normalizeColor(attr.eq);
-                      break;
-                    default:
-                      throw new Error(`Unknown graph attribute ${attr.id}`);
-                  }
-                }
-              }
-              break;
-            case 'node_stmt': {
+            case 'node': {
               const element = parseNode(child);
               if (element.shape === 'record') {
                 element.direction = recordHorizontal ? 'horizontal' :
@@ -184,18 +168,15 @@ export const graphParsers
               result.children!.push(element);
               break;
             }
-            case 'edge_stmt': {
-              if (!child.edge_list || child.edge_list.length !== 2) {
-                throw new Error('Edge must have two ends');
-              }
+            case 'edge': {
               const element: EdgeData = {
                 type: 'edge',
                 shape: 'quadratic',
                 id: generateId(),
-                from: child.edge_list[0].id + (child.edge_list[0].port ?
-                  ':' + child.edge_list[0].port.id : ''),
-                to: child.edge_list[1].id + (child.edge_list[1].port ?
-                  ':' + child.edge_list[1].port.id : ''),
+                from: child.from.id + (child.from.port ?
+                  ':' + child.from.port : ''),
+                to: child.to.id + (child.to.port ?
+                  ':' + child.to.port : ''),
               };
               // TODO: edge attributes
               result.children!.push(element);
@@ -205,19 +186,20 @@ export const graphParsers
               result.children!.push(parseGraph(child));
               break;
             default:
-              throw new Error(`Unknown child type ${child.type}`);
+              throw new Error(`Unknown child type`);
           }
         }
       }
       return result;
     }
-    return parseGraph(ast[0]);
+    return parseGraph(graph);
   },
   xdot(input: string, config?: GraphParserConfig) {
     const dotScanner = new DotScanner();
     const dotParser = new DotParser(dotScanner.scan(input));
     const graph = dotParser.parse();
-    xdotAttrPass(graph);
+    xdotComputedAttrPass(graph);
+    xdotShapeAttrPass(graph);
     xdotReverseY(graph);
     // tslint:disable-next-line:no-console
     // console.log(graph);

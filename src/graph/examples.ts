@@ -6,7 +6,6 @@ import icosahedronJson from '!raw-loader!./examples/icosahedron.txt';
 import tableJson from '!raw-loader!./examples/table.txt';
 import edgeJson from '!raw-loader!./examples/edge.txt';
 import stdThreadJoinXdot from '!raw-loader!./examples/stdThreadJoin.xdot.txt';
-import testXdot from '!raw-loader!./examples/test.xdot.txt';
 
 interface Example {
   name: string;
@@ -54,10 +53,5 @@ export const graphExamples: Example[] = [
     name: 'stdThreadJoinXdot',
     parser: 'xdot',
     content: stdThreadJoinXdot,
-  },
-  {
-    name: 'testXdot',
-    parser: 'xdot',
-    content: testXdot,
   },
 ];

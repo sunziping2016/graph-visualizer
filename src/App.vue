@@ -71,6 +71,7 @@
                 <select id="input-format" v-model="parser">
                   <option value="json" selected>JSON</option>
                   <option value="graphviz">Graphviz</option>
+                  <option value="xdot">Xdot</option>
                 </select>
               </div>
               <button class="setting-input-redraw" @click="redraw">
@@ -110,7 +111,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Watch } from 'vue-property-decorator';
+import {Component, Vue, Watch} from 'vue-property-decorator';
 import CollapsiblePane from './components/CollapsiblePane.vue';
 import Graph from './components/Graph.vue';
 import 'vue-awesome/icons/upload';
@@ -180,6 +181,18 @@ export default class App extends Vue {
     globalGraphRoot.addEventListener('render', throttle((data: AnyShape[]) => {
       this.rendered = data;
     }, 1000 / 60));
+    if (location.hash) {
+      const script = document.createElement('script');
+      script.src = location.hash.slice(1);
+      script.onload = () => {
+        if (window.hasOwnProperty('externalData')) {
+          const {externalData} = window as any;
+          this.rawInput = externalData.content;
+          this.parser = externalData.parser;
+        }
+      };
+      document.body.append(script);
+    }
   }
   public beforeDestroy() {
     window.removeEventListener('resize', this.getSize);

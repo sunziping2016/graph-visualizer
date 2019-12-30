@@ -1,6 +1,6 @@
 import {TokenEnum} from '@/graph/dot/DotScanner';
 import BaseParser from '@/graph/dot/BaseParser';
-import {DotEdge, DotGraph, DotNode, DotNodeId, DotSubgraph} from '@/graph/base/dataXdot';
+import {DotChildElement, DotGraph, DotNodeId, DotSubgraph} from '@/graph/base/dataXdot';
 
 export default class DotParser extends BaseParser<TokenEnum> {
   public constructor(lexer: Generator<[TokenEnum, string]>) {
@@ -31,16 +31,9 @@ export default class DotParser extends BaseParser<TokenEnum> {
     }
     this.match([TokenEnum.LCURLY]);
     this.consume();
-    const graphAttrs: { [attr: string]: string } = {};
-    const nodeAttrs: { [attr: string]: string } = {};
-    const edgeAttrs: { [attr: string]: string } = {};
-    const children: Array<DotNode | DotEdge | DotSubgraph> = [];
+    const children: DotChildElement[] = [];
     while (this.lookahead[0] !== TokenEnum.RCURLY) {
-      const [newGraphAttrs, newNodeAttrs, newEdgeAttrs, newChildren] =
-        this.parseStmt();
-      Object.assign(graphAttrs, newGraphAttrs);
-      Object.assign(nodeAttrs, newNodeAttrs);
-      Object.assign(edgeAttrs, newEdgeAttrs);
+      const newChildren = this.parseStmt();
       children.push(...newChildren);
     }
     this.consume();
@@ -49,36 +42,34 @@ export default class DotParser extends BaseParser<TokenEnum> {
       strict,
       directed,
       id,
-      attrs: graphAttrs,
-      nodeAttrs,
-      edgeAttrs,
       children,
     };
   }
-  public parseStmt(): [
-    { [attr: string]: string },
-    { [attr: string]: string },
-    { [attr: string]: string },
-    Array<DotNode | DotEdge | DotSubgraph>
-  ] {
-    let graphAttrs: { [attr: string]: string } = {};
-    let nodeAttrs: { [attr: string]: string } = {};
-    let edgeAttrs: { [attr: string]: string } = {};
-    let children: Array<DotNode | DotEdge | DotSubgraph> = [];
+  public parseStmt(): DotChildElement[] {
+    let children: DotChildElement[] = [];
     switch (this.lookahead[0]) {
       case TokenEnum.GRAPH: {
         this.consume();
-        graphAttrs = this.parseAttrs();
+        children.push({
+          type: 'graphAttr',
+          attrs: this.parseAttrs(),
+        });
         break;
       }
       case TokenEnum.NODE: {
         this.consume();
-        nodeAttrs = this.parseAttrs();
+        children.push({
+          type: 'nodeAttr',
+          attrs: this.parseAttrs(),
+        });
         break;
       }
       case TokenEnum.EDGE: {
         this.consume();
-        edgeAttrs = this.parseAttrs();
+        children.push({
+          type: 'edgeAttr',
+          attrs: this.parseAttrs(),
+        });
         break;
       }
       case TokenEnum.SUBGRAPH:
@@ -109,7 +100,11 @@ export default class DotParser extends BaseParser<TokenEnum> {
           }
           case TokenEnum.EQUAL: {
             this.consume();
-            this.parseId();
+            const value = this.parseId();
+            children.push({
+              type: 'graphAttr',
+              attrs: { [id.id]: value},
+            });
             break;
           }
           default: {
@@ -127,7 +122,7 @@ export default class DotParser extends BaseParser<TokenEnum> {
     if (this.lookahead[0] === TokenEnum.SEMI) {
       this.consume();
     }
-    return [graphAttrs, nodeAttrs, edgeAttrs, children];
+    return children;
   }
   public parseAttrs(): { [attr: string]: string } {
     const attrs: { [attr: string]: string } = {};
@@ -156,10 +151,7 @@ export default class DotParser extends BaseParser<TokenEnum> {
   }
   public parseSubgraph(): DotSubgraph {
     let id: string | undefined;
-    const graphAttrs: { [attr: string]: string } = {};
-    const nodeAttrs: { [attr: string]: string } = {};
-    const edgeAttrs: { [attr: string]: string } = {};
-    const children: Array<DotNode | DotEdge | DotSubgraph> = [];
+    const children: DotChildElement[] = [];
     if (this.lookahead[0] as TokenEnum === TokenEnum.SUBGRAPH) {
       this.consume();
       if (this.lookahead[0] === TokenEnum.ID) {
@@ -169,11 +161,7 @@ export default class DotParser extends BaseParser<TokenEnum> {
     if (this.lookahead[0] as TokenEnum === TokenEnum.LCURLY) {
       this.consume();
       while (this.lookahead[0] !== TokenEnum.RCURLY) {
-        const [newGraphAttrs, newNodeAttrs, newEdgeAttrs, newChildren] =
-          this.parseStmt();
-        Object.assign(graphAttrs, newGraphAttrs);
-        Object.assign(nodeAttrs, newNodeAttrs);
-        Object.assign(edgeAttrs, newEdgeAttrs);
+        const newChildren = this.parseStmt();
         children.push(...newChildren);
       }
       this.consume();
@@ -181,9 +169,6 @@ export default class DotParser extends BaseParser<TokenEnum> {
     return {
       type: 'subgraph',
       id,
-      attrs: graphAttrs,
-      nodeAttrs,
-      edgeAttrs,
       children,
     };
   }

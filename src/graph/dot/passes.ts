@@ -2,41 +2,92 @@ import XDotAttrParser from '@/graph/dot/XDotAttrParser';
 import {DotElement, DotGraph} from '@/graph/base/dataXdot';
 import {RenderableData} from '@/graph/base/dataInput';
 
-export function xdotAttrPass(graph: DotGraph) {
+export function xdotComputedAttrPass(graph: DotGraph) {
+  function traversal(element: DotElement,
+                     graphAttrs: { [attr: string]: string },
+                     nodeAttrs: { [attr: string]: string },
+                     edgeAttrs: { [attr: string]: string }) {
+    switch (element.type) {
+      case 'graph':
+      case 'subgraph': {
+        const newGraphAttrs = Object.assign({}, graphAttrs);
+        const newNodeAttrs = Object.assign({}, nodeAttrs);
+        const newEdgeAttrs = Object.assign({}, edgeAttrs);
+        element.entities = [];
+        for (const child of element.children) {
+          switch (child.type) {
+            case 'graphAttr':
+              Object.assign(newGraphAttrs, child.attrs);
+              break;
+            case 'nodeAttr':
+              Object.assign(newNodeAttrs, child.attrs);
+              break;
+            case 'edgeAttr':
+              Object.assign(newEdgeAttrs, child.attrs);
+              break;
+            default:
+              element.entities.push(child);
+              traversal(child, newGraphAttrs, newNodeAttrs, newEdgeAttrs);
+              break;
+          }
+        }
+        element.computedAttrs = newGraphAttrs;
+        break;
+      }
+      case 'node':
+      case 'edge':
+        element.computedAttrs = Object.assign({}, nodeAttrs, element.attrs);
+        break;
+      default:
+        throw new Error('Should not reach here');
+    }
+  }
+  traversal(graph, {}, {}, {});
+}
+
+export function xdotShapeAttrPass(graph: DotGraph) {
   function traversal(element: DotElement) {
     switch (element.type) {
       case 'graph':
       case 'subgraph':
-        for (const attr of ['_draw_', '_ldraw_']) {
-          if (element.attrs[attr]) {
-            const parser = new XDotAttrParser(element.attrs[attr]);
-            const newShapes = parser.parse();
-            element.shapes = element.shapes || {};
-            element.shapes[attr] = newShapes;
+        if (element.computedAttrs) {
+          for (const attr of ['_draw_', '_ldraw_']) {
+            if (element.computedAttrs[attr]) {
+              const parser = new XDotAttrParser(element.computedAttrs[attr]);
+              const newShapes = parser.parse();
+              element.shapes = element.shapes || {};
+              element.shapes[attr] = newShapes;
+            }
           }
         }
-        for (const child of element.children) {
-          traversal(child);
+        if (element.entities) {
+          for (const child of element.entities) {
+            traversal(child);
+          }
         }
         break;
       case 'node':
-        for (const attr of ['_draw_', '_ldraw_']) {
-          if (element.attrs[attr]) {
-            const parser = new XDotAttrParser(element.attrs[attr]);
-            const newShapes = parser.parse();
-            element.shapes = element.shapes || {};
-            element.shapes[attr] = newShapes;
+        if (element.computedAttrs) {
+          for (const attr of ['_draw_', '_ldraw_']) {
+            if (element.computedAttrs[attr]) {
+              const parser = new XDotAttrParser(element.computedAttrs[attr]);
+              const newShapes = parser.parse();
+              element.shapes = element.shapes || {};
+              element.shapes[attr] = newShapes;
+            }
           }
         }
         break;
       case 'edge':
-        for (const attr of ['_draw_', '_ldraw_', '_hdraw_', '_tdraw_',
-                            '_hldraw_', '_tldraw_']) {
-          if (element.attrs[attr]) {
-            const parser = new XDotAttrParser(element.attrs[attr]);
-            const newShapes = parser.parse();
-            element.shapes = element.shapes || {};
-            element.shapes[attr] = newShapes;
+        if (element.computedAttrs) {
+          for (const attr of ['_draw_', '_ldraw_', '_hdraw_', '_tdraw_',
+            '_hldraw_', '_tldraw_']) {
+            if (element.computedAttrs[attr]) {
+              const parser = new XDotAttrParser(element.computedAttrs[attr]);
+              const newShapes = parser.parse();
+              element.shapes = element.shapes || {};
+              element.shapes[attr] = newShapes;
+            }
           }
         }
         break;
@@ -70,8 +121,11 @@ export function xdotReverseY(graph: DotGraph) {
         });
       });
     }
-    if (element.type === 'graph' || element.type === 'subgraph') {
-      element.children.forEach((child) => convert(child));
+    if ((element.type === 'graph' || element.type === 'subgraph')
+        && element.entities) {
+      element.entities.forEach((child) => {
+        convert(child);
+      });
     }
   }
   convert(graph);
@@ -86,7 +140,7 @@ export function xdotToRenderablePass(graph: DotGraph): RenderableData {
           shape: 'xdot',
           id: element.id.id,
           xdotId: element.id,
-          attrs: element.attrs,
+          attrs: element.computedAttrs || {},
           shapes: element.shapes,
         };
       case 'edge':
@@ -99,7 +153,7 @@ export function xdotToRenderablePass(graph: DotGraph): RenderableData {
             element.to.id,
           xdotFrom: element.from,
           xdotTo: element.to,
-          attrs: element.attrs,
+          attrs: element.computedAttrs || {},
           shapes: element.shapes,
         };
       case 'graph':
@@ -109,13 +163,11 @@ export function xdotToRenderablePass(graph: DotGraph): RenderableData {
           shape: 'xdot',
           strict: element.strict,
           directed: element.directed,
-          children: element.children.map((x) => convert(x)),
+          children: (element.entities || []).map((x) => convert(x)),
           layout: { type: 'none' },
           physics: { type: 'none' },
           component: { type: 'none' },
-          attrs: element.attrs,
-          nodeAttrs: element.nodeAttrs,
-          edgeAttrs: element.edgeAttrs,
+          attrs: element.computedAttrs || {},
           shapes: element.shapes,
         };
       case 'subgraph':
@@ -123,14 +175,11 @@ export function xdotToRenderablePass(graph: DotGraph): RenderableData {
           type: 'graph',
           id: element.id || '',
           shape: 'xdot',
-          children: element.children.map((x) => convert(x)),
+          children: (element.entities || []).map((x) => convert(x)),
           layout: { type: 'none' },
           physics: { type: 'none' },
           component: { type: 'none' },
-          attrs: element.attrs,
-          nodeAttrs: element.nodeAttrs,
-          edgeAttrs: element.edgeAttrs,
-          shapes: element.shapes,
+          attrs: element.computedAttrs || {},
         };
       default:
         throw new Error('Should not reach here');
