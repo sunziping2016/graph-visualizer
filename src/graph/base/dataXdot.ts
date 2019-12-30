@@ -83,6 +83,7 @@ export interface DotCommonGraph extends DotCommonElement {
   id?: string;
   children: DotChildElement[];
   entities?: Array<DotNode | DotEdge | DotSubgraph>;
+  boundingBox?: [number, number, number, number];
 }
 
 export interface DotGraph extends DotCommonGraph {

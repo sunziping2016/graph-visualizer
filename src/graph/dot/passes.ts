@@ -1,5 +1,5 @@
 import XDotAttrParser from '@/graph/dot/XDotAttrParser';
-import {DotElement, DotGraph} from '@/graph/base/dataXdot';
+import {DotElement, DotGraph, DotSubgraph} from '@/graph/base/dataXdot';
 import {RenderableData} from '@/graph/base/dataInput';
 
 export function xdotComputedAttrPass(graph: DotGraph) {
@@ -100,6 +100,15 @@ export function xdotShapeAttrPass(graph: DotGraph) {
 
 export function xdotReverseY(graph: DotGraph) {
   function convert(element: DotElement) {
+    if ((element.type === 'graph' || element.type === 'subgraph')
+        && element.boundingBox) {
+      element.boundingBox = [
+        element.boundingBox[0],
+        -element.boundingBox[3],
+        element.boundingBox[2],
+        -element.boundingBox[1],
+      ];
+    }
     if (element.shapes) {
       Object.keys(element.shapes).forEach((draw) => {
         const shapes = element.shapes![draw];
@@ -169,6 +178,7 @@ export function xdotToRenderablePass(graph: DotGraph): RenderableData {
           component: { type: 'none' },
           attrs: element.computedAttrs || {},
           shapes: element.shapes,
+          boundingBox: element.boundingBox,
         };
       case 'subgraph':
         return {
@@ -180,10 +190,76 @@ export function xdotToRenderablePass(graph: DotGraph): RenderableData {
           physics: { type: 'none' },
           component: { type: 'none' },
           attrs: element.computedAttrs || {},
+          shapes: element.shapes,
+          boundingBox: element.boundingBox,
         };
       default:
         throw new Error('Should not reach here');
     }
   }
   return convert(graph);
+}
+
+export function xdotBoundingBoxPass(graph: DotGraph) {
+  function traversal(element: DotGraph | DotSubgraph) {
+    if (element.computedAttrs && element.computedAttrs.bb) {
+      element.boundingBox = element.computedAttrs.bb.split(',')
+        .map((x) => parseInt(x, 10)) as any;
+      if (element.entities) {
+        for (const child of element.entities) {
+          if (child.type === 'subgraph') {
+            traversal(child);
+          }
+        }
+      }
+    }
+  }
+  traversal(graph);
+}
+
+export function xdotMovePass(graph: DotGraph, deltaX: number, deltaY: number) {
+
+  function convert(element: DotElement) {
+    if ((element.type === 'graph' || element.type === 'subgraph')
+      && element.boundingBox) {
+      element.boundingBox = [
+        element.boundingBox[0] + deltaX,
+        element.boundingBox[1] + deltaY,
+        element.boundingBox[2] + deltaX,
+        element.boundingBox[3] + deltaY,
+      ];
+    }
+    if (element.shapes) {
+      Object.keys(element.shapes).forEach((draw) => {
+        const shapes = element.shapes![draw];
+        shapes.forEach((shape) => {
+          switch (shape.type) {
+            case 'text':
+            case 'ellipse':
+            case 'image':
+              shape.x += deltaX;
+              shape.y += deltaY;
+              break;
+            case 'bezier':
+            case 'line':
+            case 'polygon':
+              shape.points.forEach((point) => {
+                point[0] += deltaX;
+                point[1] += deltaY;
+              });
+              break;
+            default:
+              throw new Error('Should not reach here');
+          }
+        });
+      });
+    }
+    if ((element.type === 'graph' || element.type === 'subgraph')
+      && element.entities) {
+      element.entities.forEach((child) => {
+        convert(child);
+      });
+    }
+  }
+  convert(graph);
 }

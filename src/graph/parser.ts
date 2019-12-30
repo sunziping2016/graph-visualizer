@@ -8,7 +8,14 @@ import {
 } from '@/graph/base/dataInput';
 import DotScanner from '@/graph/dot/DotScanner';
 import DotParser from '@/graph/dot/DotParser';
-import {xdotShapeAttrPass, xdotReverseY, xdotToRenderablePass, xdotComputedAttrPass} from '@/graph/dot/passes';
+import {
+  xdotShapeAttrPass,
+  xdotReverseY,
+  xdotToRenderablePass,
+  xdotComputedAttrPass,
+  xdotBoundingBoxPass,
+  xdotMovePass,
+} from '@/graph/dot/passes';
 import {DotGraph, DotNode, DotSubgraph} from '@/graph/base/dataXdot';
 
 const alnumChars: string = '0123456789' +
@@ -60,8 +67,6 @@ export const graphParsers
     const dotParser = new DotParser(dotScanner.scan(input));
     const graph = dotParser.parse();
     xdotComputedAttrPass(graph);
-    // tslint:disable-next-line:no-console
-    console.log(graph);
 
     function parseNode(data: DotNode): NodeData {
       const result: NodeData = {
@@ -200,9 +205,13 @@ export const graphParsers
     const graph = dotParser.parse();
     xdotComputedAttrPass(graph);
     xdotShapeAttrPass(graph);
+    xdotBoundingBoxPass(graph);
     xdotReverseY(graph);
-    // tslint:disable-next-line:no-console
-    // console.log(graph);
+    if (graph.boundingBox) {
+      const deltaX = -0.5 * (graph.boundingBox[0] + graph.boundingBox[2]);
+      const deltaY = -0.5 * (graph.boundingBox[1] + graph.boundingBox[3]);
+      xdotMovePass(graph, deltaX, deltaY);
+    }
     return xdotToRenderablePass(graph);
   },
 };

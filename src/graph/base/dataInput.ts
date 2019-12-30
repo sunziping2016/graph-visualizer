@@ -206,6 +206,7 @@ export interface XdotGraphData extends CommonGraphData {
   shape: 'xdot';
   attrs: { [attr: string]: string };
   shapes?: { [draw: string]: XdotShape[] };
+  boundingBox?: [number, number, number, number];
 }
 
 export type GraphData = BoxGraphData | XdotGraphData;
