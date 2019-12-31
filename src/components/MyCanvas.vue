@@ -204,15 +204,6 @@ export default class MyCanvas extends Vue {
                 shape.centering === 0 ? 'center' : 'right';
               ctx.textBaseline = 'alphabetic';
               ctx.fillText(shape.text, shape.x, shape.y, shape.width);
-              if (finalDraggable && finalId) {
-                const color = this.generateHitColor(finalId);
-                hitCtx.font = `${shape.pen.fontsize}px ${shape.pen.fontname}`;
-                hitCtx.fillStyle = color;
-                hitCtx.textAlign = shape.centering === -1 ? 'left' :
-                  shape.centering === 0 ? 'center' : 'right';
-                hitCtx.textBaseline = 'alphabetic';
-                hitCtx.fillText(shape.text, shape.x, shape.y, shape.width);
-              }
               break;
             }
             case 'ellipse': {
