@@ -37,5 +37,5 @@ All notable changes to this project will be documented in this file.
     - Settings panel
   - Capable of drag elements and highlight them
 
-[Unreleased]: https://git.tsmart.tech/Tsmart/tsmart-v3/compare/v0.1.0...HEAD
-[0.1.0]: https://git.tsmart.tech/Tsmart/tsmart-v3/tree/v0.1.0
+[Unreleased]: https://git.tsmart.tech/Tsmart/vfg-visualizer/compare/v0.1.0...HEAD
+[0.1.0]: https://git.tsmart.tech/Tsmart/vfg-visualizer/tree/v0.1.0
