@@ -9,14 +9,13 @@ import {selectedBoundingBoxPen} from '@/graph/palette';
 export default class XdotNodeType extends NodeType {
   private shapes!: XdotShape[];
   private boundingBox: [number, number, number, number] | undefined;
-  private selected: boolean;
+  private selected!: boolean;
   constructor(parent: Node, data: NodeData) {
     if (data.shape !== 'xdot') {
       throw new Error('Expect xdot shape');
     }
     super(parent);
     this.updateData(data);
-    this.selected = false;
   }
   public findPort(id: string[]): Port | null {
     return this.parent;
@@ -25,10 +24,15 @@ export default class XdotNodeType extends NodeType {
     this.shapes = data.shapes ? ([] as XdotShape[]).concat(
       ...Object.keys(data.shapes).map((x) => data.shapes![x])) : [];
     this.boundingBox = data.boundingBox;
+    this.selected = false;
   }
   public render(): AnyShape[] {
+    const shapes = this.shapes.map(
+      (x) => Object.assign({}, x, {
+        pen: this.parent.root.applyHighlighted(x.pen, this.parent.highlighted),
+      }));
     if (this.selected && this.boundingBox) {
-      return this.shapes.concat({
+      return shapes.concat({
         is: 'xdot',
         type: 'polygon',
         pen: selectedBoundingBoxPen,
@@ -41,7 +45,7 @@ export default class XdotNodeType extends NodeType {
         filled: false,
       });
     } else {
-      return this.shapes;
+      return shapes;
     }
   }
   public onSelect(select: boolean): boolean {

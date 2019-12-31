@@ -279,7 +279,7 @@ export function xdotBoundingBoxPass(graph: DotGraph,
         break;
       }
       case 'edge': {
-        // TODO
+        // do nothing
         break;
       }
       default:

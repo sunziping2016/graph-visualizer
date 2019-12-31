@@ -19,6 +19,7 @@ export default class Node extends Port implements Renderable {
   public readonly graph: Graph | null;
   public depth!: number;
   public fullId!: string;
+  public highlighted!: boolean;
   public fromEdges!: Set<Edge>;
   public toEdges!: Set<Edge>;
   private nodeType!: NodeType;
@@ -38,6 +39,7 @@ export default class Node extends Port implements Renderable {
     this.id = Node.getId(data);
     this.depth = parentData ? parentData.depth + 1 : 0;
     this.fullId = parentData ? `${parentData.parentId}:${this.id}` : this.id;
+    this.highlighted = false;
     this.fromEdges = new Set();
     this.toEdges = new Set();
     const typeClass = nodeTypeFactory(data);

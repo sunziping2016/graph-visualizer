@@ -18,4 +18,7 @@ export default abstract class GraphType {
   public distanceToBorder(angle: number): number {
     return 0;
   }
+  public onSelect(select: boolean): boolean {
+    return false;
+  }
 }

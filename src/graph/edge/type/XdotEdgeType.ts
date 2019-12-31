@@ -18,9 +18,13 @@ export default class XdotEdgeType extends EdgeType {
       ...Object.keys(data.shapes).map((x) => data.shapes![x])) : [];
   }
   public render(): AnyShape {
+    const shapes = this.shapes.map(
+      (x) => Object.assign({}, x, {
+        pen: this.parent.root.applyHighlighted(x.pen, this.parent.highlighted),
+      }));
     return{
       is: 'group',
-      children: this.shapes,
+      children: shapes,
     };
   }
 }

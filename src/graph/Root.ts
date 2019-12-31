@@ -5,14 +5,19 @@ import Renderable from '@/graph/base/Renderable';
 import Port from '@/graph/base/Port';
 import Graph from '@/graph/graph/Graph';
 import Node from '@/graph/node/Node';
-
+import Edge from '@/graph/edge/Edge';
+import highlightSeeker, {HighlightMode} from '@/graph/highlightSeeker';
+import {add} from 'lodash-es';
+import {XdotPen} from '@/graph/base/dataXdot';
 
 export default class Root extends EventEmitter {
   public ctx: CanvasRenderingContext2D;
   public child: (Renderable & Port) | null;
+  public selected: Set<string>;
+  public highlightMode: HighlightMode;
+  public highlighted: Set<Graph | Node | Edge>;
   private stepTimer: number;
   private fixed: Set<string>;
-  private selected: Set<string>;
   public constructor() {
     super();
     this.ctx = document.createElement('canvas').getContext('2d')!;
@@ -26,6 +31,8 @@ export default class Root extends EventEmitter {
     }, 1000 / 60);
     this.fixed = new Set();
     this.selected = new Set();
+    this.highlightMode = 'no';
+    this.highlighted = new Set();
   }
   public findPort(id: string) {
     const idArray = id.split(':');
@@ -77,8 +84,54 @@ export default class Root extends EventEmitter {
       refresh = port.onSelect(true) || refresh;
     }
     this.selected = newSelected;
-    if (refresh) {
+    if (this.updateHighlighted() || refresh) {
       this.informRender();
+    }
+  }
+  public setHighlightMode(mode: HighlightMode) {
+    const refresh = (this.highlightMode === 'no' || mode === 'no') &&
+      this.highlightMode !== mode;
+    this.highlightMode = mode;
+    if (this.updateHighlighted() || refresh) {
+      this.informRender();
+    }
+  }
+  public updateHighlighted(): boolean {
+    const newHighlighted = highlightSeeker[this.highlightMode](this);
+    const removed = [...this.highlighted].filter(
+      (x) => !newHighlighted.has(x));
+    for (const item of removed) {
+      item.highlighted = false;
+    }
+    const added = [...newHighlighted].filter(
+      (x) => !this.highlighted.has(x));
+    for (const item of added) {
+      item.highlighted = true;
+    }
+    this.highlighted = newHighlighted;
+    return !!(removed.length || added.length);
+  }
+  public applyHighlighted(pen: XdotPen, highlighted: boolean): XdotPen {
+    if (this.highlightMode === 'no') {
+      return pen;
+    }
+    if (!highlighted) {
+      const newPen = Object.assign({}, pen);
+      newPen.color = [
+        newPen.color[0],
+        newPen.color[1],
+        newPen.color[2],
+        0.2,
+      ];
+      newPen.fillcolor = [
+        newPen.fillcolor[0],
+        newPen.fillcolor[1],
+        newPen.fillcolor[2],
+        0.2,
+      ];
+      return newPen;
+    } else {
+      return pen;
     }
   }
   public movePort(id: string,

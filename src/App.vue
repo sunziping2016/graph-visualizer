@@ -102,6 +102,7 @@
                 <input type="checkbox" id="enableDraggable" checked
                        v-model="enableDraggable">
               </div>
+              <h4>以下设置仅适用于Xdot格式</h4>
               <div class="settings-settings-highlight">
                 <label for="enable-highlight">高亮模式：</label>
                 <select id="enable-highlight" v-model="highlightMode">
@@ -278,6 +279,12 @@ export default class App extends Vue {
   public onSettingsWidthChanged() {
     this.updateCanvasSize();
   }
+  @Watch('settingsOpen')
+  public onSettingsOpenChanged() {
+    setTimeout(() => {
+      this.updateCanvasSize();
+    }, 300);
+  }
   @Watch('parser')
   public onParserChanged() {
     switch (this.parser) {
@@ -302,6 +309,10 @@ export default class App extends Vue {
   @Watch('enableDraggable')
   public onEnableDraggableChanged() {
     (this.$refs.graph as any).enableDraggable = this.enableDraggable;
+  }
+  @Watch('highlightMode')
+  public onHighlightModeChanged() {
+    globalGraphRoot.setHighlightMode(this.highlightMode as any);
   }
   public redraw() {
     if (this.parsedInput) {

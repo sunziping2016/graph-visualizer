@@ -23,6 +23,7 @@ export default class Edge implements Renderable {
   public to!: string;
   public depth!: number;
   public fullId!: string;
+  public highlighted!: boolean;
   public readonly root: Root;
   public readonly graph: Graph | null;
   public readonly parent: Positioned | null;
@@ -54,6 +55,7 @@ export default class Edge implements Renderable {
     if (!this.graph) {
       throw new Error('Top level edge cannot be rendered');
     }
+    this.highlighted = false;
     const fromPort = this.graph.findPort(this.from.split(':'));
     const toPort = this.graph.findPort(this.to.split(':'));
     if (!fromPort || !toPort) {
