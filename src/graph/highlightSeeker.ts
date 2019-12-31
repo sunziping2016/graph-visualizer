@@ -52,7 +52,9 @@ const highlightSeeker: {
       result.add(node);
       for (const edge of node.toEdges) {
         result.add(edge);
-        traversal(edge.fromNodeOrGraph);
+        if (!result.has(edge.fromNodeOrGraph)) {
+          traversal(edge.fromNodeOrGraph);
+        }
       }
     }
     for (const item of root.selected) {
@@ -72,7 +74,9 @@ const highlightSeeker: {
       result.add(node);
       for (const edge of node.fromEdges) {
         result.add(edge);
-        traversal(edge.toNodeOrGraph);
+        if (!result.has(edge.toNodeOrGraph)) {
+          traversal(edge.toNodeOrGraph);
+        }
       }
     }
     for (const item of root.selected) {
