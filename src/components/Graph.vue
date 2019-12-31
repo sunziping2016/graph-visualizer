@@ -50,6 +50,7 @@ export default class Graph extends Vue {
     x: 0,
     y: 0,
   };
+  private moved = false;
   private maxThumbnailLength = 160;
   private minThumbnailLength = 100;
   private thumbnailPadding = 10;
@@ -196,21 +197,29 @@ export default class Graph extends Vue {
         this.draggedId = id;
         globalGraphRoot.setFixed([id]);
       }
-      globalGraphRoot.setSelected([id]);
-    } else {
-      globalGraphRoot.setSelected([]);
     }
+    this.moved = false;
   }
-  public mouseup() {
+  public mouseup(e: MouseEvent) {
     this.mouseDragActive = false;
     this.draggedId = null;
     globalGraphRoot.setFixed([]);
-  }
-  public mousemove(e: MouseEvent) {
-    if (e.buttons === 0) {
-      this.mouseDragActive = false;
+    if (!this.moved) {
       const pos = this.translateMouseEvent(e);
       const id = (this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y);
+      if (id) {
+        globalGraphRoot.setSelected([id]);
+      } else {
+        globalGraphRoot.setSelected([]);
+      }
+    }
+  }
+  public mousemove(e: MouseEvent) {
+    this.moved = true;
+    if (e.buttons === 0) {
+      this.mouseDragActive = false;
+      // const pos = this.translateMouseEvent(e);
+      // const id = (this.$refs.mainCanvas as any).getIdFromHitPoint(pos.x, pos.y);
       // tslint:disable-next-line:no-console
       // console.log(id);
     }
