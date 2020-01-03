@@ -29,11 +29,11 @@ export enum TokenEnum {
 
 export default class DotScanner extends BaseScanner<TokenEnum> {
   private static tokens: Array<[TokenEnum, string, boolean]> = [
-    [TokenEnum.SKIP, '[ \\t\\f\\r\\n\\v]+|//[^\\r\\n]*|/\\*.*?\\*/|#[^\\r\\n]*',
+    [TokenEnum.SKIP, '[ \\t\\f\\r\\n\\v]+|//[^\\r\\n]*|/\\*(?:.|\\n)*?\\*/|#[^\\r\\n]*',
       false],
     [TokenEnum.ID, '[a-zA-Z_\\x80-\\xff][a-zA-Z0-9_\\x80-\\xff]*', true],
     [TokenEnum.ID, '-?(?:\\.[0-9]+|[0-9]+(?:\\.[0-9]*)?)', false],
-    [TokenEnum.STR_ID, '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"', false],
+    [TokenEnum.STR_ID, '"[^"\\\\]*(?:\\\\(?:.|\\n)[^"\\\\]*)*"', false],
     [TokenEnum.HTML_ID, '<[^<>]*(?:<[^<>]*>[^<>]*)*>', false],
     [TokenEnum.EDGE_OP, '-[>-]', false],
   ];

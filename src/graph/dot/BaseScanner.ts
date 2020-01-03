@@ -16,7 +16,7 @@ export default class BaseScanner<T> {
     this.literals = literals;
     this.eofToken = eofToken;
     this.skipToken = skipToken;
-    let flags = 's';
+    let flags = '';
     if (ignoreCase) {
       flags += 'i';
     }
